@@ -11,4 +11,10 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+  namespace :api do
+    resources :premium_content, only: [:index, :show] do
+      get 'paywalled_info', on: :collection
+      get 'free_info', on: :collection
+    end
+  end
 end

@@ -1,6 +1,3 @@
-require "instapay/version"
-require "instapay/railtie"
+# frozen_string_literal: true
 
-module Instapay
-  # Your code goes here...
-end
+require "instapay/instapay"
