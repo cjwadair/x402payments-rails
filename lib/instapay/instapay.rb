@@ -2,7 +2,9 @@ require "instapay/version"
 require "instapay/railtie"
 require "instapay/configuration"
 require "instapay/controller_extensions"
-require "instapay/response_generators/requirements_response"
+require "instapay/response_generators/accepted_payments_resolver"
+require "instapay/response_generators/accepted_payments_formatter"
+require "instapay/response_generators/payment_required_response"
 
 module Instapay
 

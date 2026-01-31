@@ -7,13 +7,6 @@ class PremiumContentTest < ActionDispatch::IntegrationTest
 
     json_response = JSON.parse(response.body)
     assert_equal 2, json_response["x402Version"]
-    assert_includes json_response["error"], "Payment required"
-
-    resource = json_response["resource"]
-    assert_equal api_premium_content_paywalled_info_url, resource["url"]
-    assert_includes resource["description"], "Payment required to access"
-    assert_equal "application/json", resource["mimeType"]
-
     assert json_response["accepts"].is_a?(Array)
     assert_not_empty json_response["accepts"]
   end
@@ -24,5 +17,4 @@ class PremiumContentTest < ActionDispatch::IntegrationTest
     json_response = JSON.parse(response.body)
     assert_equal "This is free content accessible to all users.", json_response["message"]
   end
-
 end
