@@ -8,13 +8,13 @@ module Instapay
 
     # Optional: in a controller, call `before_action :enforce_paywall`
     # to run this hook ahead of every request.
-    def enforce_paywall
-      require_payment
-    end
+    # def enforce_paywall(options = {})
+    #   require_payment(options)
+    # end
 
-    def require_payment
+    def require_x402_payment(options = {})
       if request.headers['PAYMENT-SIGNATURE'].blank?
-        render_payment_required
+        render_payment_required(options)
       end
     end
 
@@ -43,6 +43,8 @@ module Instapay
       })
 
       #note -- add error handling here in case of an error generating the response object
+
+      puts "Generating payment required response with options: #{updated_options.inspect}"
       response_object = Instapay::ResponseGenerators::RequirementsResponse.generate(updated_options)
 
       render json: response_object, status: :payment_required

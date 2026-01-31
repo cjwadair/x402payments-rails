@@ -1,16 +1,18 @@
 Instapay.configure do |config|
+
+  puts "Configuring Instapay with environment variables..."
   # Your wallet address (where payments will be received)
   # For testing, you can use a test wallet address
-  config.wallet_address = ENV.fetch("X402_WALLET_ADDRESS", "YourTestWalletAddressHere")
+  config.wallet_address = ENV.fetch("X402_WALLET_ADDRESS", '0x0613da3bd559d9ecc5a662fb517ff979cde3e78d')
 
   # Facilitator URL (default: https://x402.org/facilitator)
   # The facilitator handles payment verification and settlement
   config.facilitator = ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator")
 
-  # Blockchain network to use
+  # Default Network to use
   config.chain = ENV.fetch("X402_CHAIN", "base-sepolia")
   
-  # Currency symbol
+  # Default Currency to use
   config.currency = ENV.fetch("X402_CURRENCY", "USDC")
 
   # Custom Chain and Token Registration
@@ -49,6 +51,3 @@ Instapay.configure do |config|
   # If set to true, the nonce will need to be tracked as if re-used it should abort the request and return a 402 Payment Required error.
   config.optimistic = ENV.fetch("X402_OPTIMISTIC", "false") == "true"
 end
-
-# Validate configuration on initialization
-Instapay.configuration.validate!

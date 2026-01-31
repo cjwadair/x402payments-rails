@@ -3,8 +3,8 @@
 module Instapay
   class Configuration
 
-    attr_accessor :wallet_address, :facilitator, :chain, :currency, :optimistic, :fee_payer
-    attr_reader :custom_chains, :custom_tokens, :accepted_payments
+    attr_accessor :wallet_address, :facilitator, :chain, :currency, :optimistic, :fee_payer, :custom_tokens
+    attr_reader :custom_chains, :accepted_payments
 
     def initialize
       @wallet_address = ENV.fetch("X402_WALLET_ADDRESS", nil)
@@ -42,11 +42,16 @@ module Instapay
       @accepted_payments << {
         chain: chain,
         currency: currency || @currency,
-        wallet_address: wallet_address
+        wallet_address: wallet_address || @wallet_address
       }
     end
 
     def register_chain(name:, chain_id:, standard:)
+      
+      unless standard == "eip155"
+        raise ConfigurationError, "Only eip155 (EVM) chains are supported for custom registration"
+      end
+      
       @custom_chains[name] = {
         name: name,
         chain_id: chain_id,
@@ -55,11 +60,10 @@ module Instapay
     end
 
     def register_token(chain:, symbol:, address:, decimals:, name:, version: nil)
-      normalized_symbol = symbol.to_s.upcase
-      @custom_tokens[chain] ||= {}
-      @custom_tokens[chain][normalized_symbol] = {
+      key = "#{chain}:#{symbol}".downcase
+      @custom_tokens[key] = {
         chain: chain,
-        symbol: normalized_symbol,
+        symbol: symbol,
         address: address,
         decimals: decimals,
         name: name,
@@ -68,7 +72,8 @@ module Instapay
     end
 
     def token_config(chain, symbol)
-      @custom_tokens.dig(chain, symbol.to_s.upcase)
+      key = "#{chain}:#{symbol}".downcase
+      @custom_tokens[key]
     end
 
     def chain_config(name)
@@ -86,6 +91,8 @@ module Instapay
       #triggered when user sets the initializers/instapay.rb file
       def configure
         yield(configuration)
+        #call validate on initialization
+        configuration.validate!
       end
 
       def reset_configuration!
@@ -94,7 +101,7 @@ module Instapay
 
     end
 
-    class ConfigurationError < StandardError; end
-
   end
+
+  class ConfigurationError < StandardError; end
 end

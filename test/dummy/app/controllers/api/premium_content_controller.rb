@@ -2,7 +2,8 @@ module Api
   class PremiumContentController < ApplicationController
     # before_action :authenticate_user!
     # before_action :ensure_premium_access
-    before_action :enforce_paywall#, only: [:paywalled_info]
+    # before_action -> { enforce_paywall(paywall_options) }, except: [:free_info]
+    before_action :require_payment, except: [:free_info]
 
     def paywalled_info
       render json: {
@@ -15,6 +16,19 @@ module Api
       render json: {
         message: "This is free content accessible to all users."
       }
+    end
+
+    private
+
+    def require_payment
+      require_x402_payment(paywall_options)
+    end
+
+    def paywall_options
+      {
+        "paywalled_info" => {amount: 0.05},
+        "free_info" => {amount: 0.00}
+      }.fetch(action_name, {amount: 0.01})
     end
 
   end
