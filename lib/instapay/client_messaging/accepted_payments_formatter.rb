@@ -1,5 +1,5 @@
 module Instapay
-  module ResponseGenerators
+  module ClientMessaging
     class AcceptedPaymentsFormatter
       def format(payment, options)
         token_config = get_token_config(payment)
@@ -19,7 +19,11 @@ module Instapay
           extra: extra_data
         }
 
-        Base64.strict_encode64(response.to_json)
+        puts "Formatted accepted payment: #{response.inspect}"
+
+        #TBD - move base64 coding to caller or separate utility class
+        # Base64.strict_encode64(response.to_json)
+        response
       end
 
       private

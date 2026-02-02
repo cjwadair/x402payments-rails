@@ -2,9 +2,15 @@ require "instapay/version"
 require "instapay/railtie"
 require "instapay/configuration"
 require "instapay/controller_extensions"
-require "instapay/response_generators/accepted_payments_resolver"
-require "instapay/response_generators/accepted_payments_formatter"
-require "instapay/response_generators/payment_required_response"
+require "instapay/payment_validator"
+require "instapay/facilitator_client"
+# require "instapay/facilitator_messaging/payment_processing_request"
+# require "instapay/facilitator_messaging/payment_verification_request"
+# require "instapay/facilitator_messaging/payment_settlement_request"
+require "instapay/client_messaging/accepted_payments_resolver"
+require "instapay/client_messaging/accepted_payments_formatter"
+require "instapay/client_messaging/accepted_payments_builder"
+require "instapay/client_messaging/payment_required_response"
 
 module Instapay
 

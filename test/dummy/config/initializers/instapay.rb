@@ -7,7 +7,7 @@ Instapay.configure do |config|
 
   # Facilitator URL (default: https://x402.org/facilitator)
   # The facilitator handles payment verification and settlement
-  config.facilitator = ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator")
+  config.facilitator_url = ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator")
 
   # Default Network to use
   config.chain = ENV.fetch("X402_CHAIN", "base-sepolia")

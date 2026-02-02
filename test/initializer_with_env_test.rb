@@ -19,7 +19,7 @@ class InitializerWithEnvTest < ActiveSupport::TestCase
     
     Instapay.configure do |config|
       config.wallet_address = "0xNewTestWallet"
-      config.facilitator = "https://test.facilitator.com"
+      config.facilitator_url = "https://test.facilitator.com"
       config.chain = "polygon-amoy"
       config.currency = "MATIC"
       config.optimistic = true
@@ -30,7 +30,7 @@ class InitializerWithEnvTest < ActiveSupport::TestCase
     # Verify the new configuration
     config = Instapay.configuration
     assert_equal "0xNewTestWallet", config.wallet_address
-    assert_equal "https://test.facilitator.com", config.facilitator
+    assert_equal "https://test.facilitator.com", config.facilitator_url
     assert_equal "polygon-amoy", config.chain
     assert_equal "MATIC", config.currency
     assert_equal true, config.optimistic

@@ -2,7 +2,7 @@ require "test_helper"
 
 class AcceptedPaymentsResolverTest < ActiveSupport::TestCase
   def setup
-    @resolver = Instapay::ResponseGenerators::AcceptedPaymentsResolver.new
+    @resolver = Instapay::ClientMessaging::AcceptedPaymentsResolver.new
   end
 
   test "resolves from accepts array when provided" do

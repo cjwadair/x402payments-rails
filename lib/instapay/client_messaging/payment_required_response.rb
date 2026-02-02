@@ -15,11 +15,13 @@ module Instapay
 
       def generate(options = {})
         accepted_payments = build_accepted_payments_object(options)
-        build_response_object(
+        response = build_response_object(
           accepts: accepted_payments,
           resource_url: options[:resource],
           description: options[:description]
         )
+        puts "x402 response object: #{response.inspect}"
+        response
       end
 
       def build_response_object(accepts:, resource_url:, description:)

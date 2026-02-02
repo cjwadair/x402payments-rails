@@ -6,7 +6,7 @@ class InitializerTest < ActiveSupport::TestCase
 
     # Test that configuration values from the initializer are set
     assert_equal "0x0613da3bd559d9ecc5a662fb517ff979cde3e78d", config.wallet_address
-    assert_equal "https://www.x402.org/facilitator", config.facilitator
+    assert_equal "https://www.x402.org/facilitator", config.facilitator_url
     assert_equal "base-sepolia", config.chain
     assert_equal "USDC", config.currency
     assert_equal false, config.optimistic
@@ -29,7 +29,7 @@ class InitializerTest < ActiveSupport::TestCase
     assert_equal ENV.fetch("X402_WALLET_ADDRESS", '0x0613da3bd559d9ecc5a662fb517ff979cde3e78d'), 
                  config.wallet_address
     assert_equal ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator"), 
-                 config.facilitator
+                 config.facilitator_url
     assert_equal ENV.fetch("X402_CHAIN", "base-sepolia"), 
                  config.chain
     assert_equal ENV.fetch("X402_CURRENCY", "USDC"), 

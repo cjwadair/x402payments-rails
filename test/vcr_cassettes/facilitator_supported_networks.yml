@@ -1,0 +1,47 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://www.x402.org/facilitator/supported
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v2.14.0
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Age:
+      - '0'
+      Cache-Control:
+      - public, max-age=0, must-revalidate
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 01 Feb 2026 19:36:37 GMT
+      Server:
+      - Vercel
+      Strict-Transport-Security:
+      - max-age=63072000
+      Vary:
+      - rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+      X-Matched-Path:
+      - "/facilitator/supported"
+      X-Vercel-Cache:
+      - MISS
+      X-Vercel-Id:
+      - yul1::iad1::mshph-1769974596971-dc6ed2550604
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: '{"kinds":[{"x402Version":2,"scheme":"exact","network":"eip155:84532"},{"x402Version":2,"scheme":"exact","network":"solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1","extra":{"feePayer":"CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5"}},{"x402Version":1,"scheme":"exact","network":"base-sepolia"},{"x402Version":1,"scheme":"exact","network":"solana-devnet","extra":{"feePayer":"CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5"}}],"extensions":[],"signers":{"eip155:*":["0xd407e409E34E0b9afb99EcCeb609bDbcD5e7f1bf"],"solana:*":["CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5"]}}'
+  recorded_at: Sun, 01 Feb 2026 19:36:37 GMT
+recorded_with: VCR 6.4.0

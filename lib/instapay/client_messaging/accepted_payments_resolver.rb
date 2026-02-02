@@ -1,5 +1,5 @@
 module Instapay
-  module ResponseGenerators
+  module ClientMessaging
     class AcceptedPaymentsResolver
       def resolve(accepts:, chain:, currency:)
         if accepts.present?

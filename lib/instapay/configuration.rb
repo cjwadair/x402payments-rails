@@ -3,12 +3,12 @@
 module Instapay
   class Configuration
 
-    attr_accessor :wallet_address, :facilitator, :chain, :currency, :optimistic, :fee_payer, :custom_tokens
+    attr_accessor :wallet_address, :facilitator_url, :chain, :currency, :optimistic, :fee_payer, :custom_tokens
     attr_reader :custom_chains, :accepted_payments
 
     def initialize
       @wallet_address = ENV.fetch("X402_WALLET_ADDRESS", nil)
-      @facilitator = ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator")
+      @facilitator_url = ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator")
       @chain = ENV.fetch("X402_CHAIN", "base-sepolia")
       @currency = ENV.fetch("X402_CURRENCY", "USDC")
       @optimistic = ENV.fetch("X402_OPTIMISTIC", "false") == "true"
@@ -22,7 +22,7 @@ module Instapay
     #TODO -- review other validations to cover
     def validate!
       raise ConfigurationError.new("wallet_address is required") if @wallet_address.nil? || @wallet_address.strip.empty?
-      raise ConfigurationError.new("facilitator URL is required") if @facilitator.nil? || @facilitator.strip.empty?
+      raise ConfigurationError.new("facilitator URL is required") if @facilitator_url.nil? || @facilitator_url.strip.empty?
       raise ConfigurationError.new("chain is required") if @chain.nil? || @chain.strip.empty?
     end
 
