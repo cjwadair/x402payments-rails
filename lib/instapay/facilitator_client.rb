@@ -54,7 +54,23 @@ module Instapay
     def handle_response(response, action)
       case response.status
       when 200..299
-        JSON.parse(response.body)
+        body = JSON.parse(response.body)
+        
+        # For verify action, validate the response payload
+        if action == "verify"
+          # Check if response indicates success (could be 'success' or 'isValid' depending on API version)
+          is_valid = body["isValid"] || body["success"]
+          
+          unless is_valid
+            raise InvalidPaymentError, "Facilitator validation failed: #{body['invalidReason'] || body['error']}"
+          end
+          
+          if body["payer"].nil?
+            raise InvalidPaymentError, "Verification failed: no payer address returned"
+          end
+        end
+        
+        body
       when 400
         error_body = JSON.parse(response.body) rescue {}
         raise InvalidPaymentError, "Invalid payment: #{error_body['error'] || response.body}"

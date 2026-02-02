@@ -132,7 +132,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         
       response = @client.settle_payment(@payload, @payment_requirements)
       assert response.is_a?(Hash)
-      assert_equal response["response"], "valid JSON"
+      assert_equal response["success"], true
     end
   end
 

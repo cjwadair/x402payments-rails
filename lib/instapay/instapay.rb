@@ -2,7 +2,6 @@ require "instapay/version"
 require "instapay/railtie"
 require "instapay/configuration"
 require "instapay/controller_extensions"
-require "instapay/payment_validator"
 require "instapay/facilitator_client"
 # require "instapay/facilitator_messaging/payment_processing_request"
 # require "instapay/facilitator_messaging/payment_verification_request"
@@ -119,6 +118,10 @@ module Instapay
 
   def self.solana_chain?(chain_name)
     SOLANA_CHAINS.include?(chain_name)
+  end
+
+  def self.evm_chain?(chain_name)
+    !solana_chain?(chain_name)
   end
 
   #NOTE -- NEED TO REVIEW AND FIGURE OUT BEST WAY TO HANDLE FEE_PAYER CONFIGURATION (IF NEEDED)
