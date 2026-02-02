@@ -21,8 +21,6 @@ module Instapay
 
         puts "Formatted accepted payment: #{response.inspect}"
 
-        #TBD - move base64 coding to caller or separate utility class
-        # Base64.strict_encode64(response.to_json)
         response
       end
 

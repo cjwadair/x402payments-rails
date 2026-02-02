@@ -124,10 +124,34 @@ module Instapay
     !solana_chain?(chain_name)
   end
 
+  def self.supported_chains
+    (CHAINS.keys + configuration.custom_chains.keys).map{|k| Instapay.to_caip2(k) }
+  end
+
+  def self.to_caip2(network_name)
+    custom = Instapay.configuration.chain_config(network_name)
+    if custom
+      return "#{custom[:standard]}:#{custom[:chain_id]}"
+    end
+
+    CAIP2_MAPPING[network_name] || raise(ConfigurationError, "No CAIP-2 mapping for: #{network_name}")
+  end
+
+  def self.from_caip2(caip2_string)
+    return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
+
+    Instapay.configuration.custom_chains.each do |name, config|
+      caip2 = "#{config[:standard]}:#{config[:chain_id]}"
+      return name if caip2 == caip2_string
+    end
+
+    raise(ConfigurationError, "Unknown CAIP-2 network: #{caip2_string}")
+  end
+
   #NOTE -- NEED TO REVIEW AND FIGURE OUT BEST WAY TO HANDLE FEE_PAYER CONFIGURATION (IF NEEDED)
   def self.fee_payer_for(chain_name)
     # Priority: 1) Programmatic config, 2) Per-chain ENV variable, 3) Generic ENV variable, 4) Default from CHAINS
-    config = configuration
+    config = Instapay.configuration
 
     # Check programmatic configuration
     return config.fee_payer if config.fee_payer && !config.fee_payer.empty?

@@ -14,18 +14,19 @@ module Instapay
 
     def require_x402_payment(options = {})
       payment_header = request.headers['PAYMENT-SIGNATURE']
+      response_object = generate_required_payment(options)
       if payment_header.blank?
-        render_payment_required(options)      
+        render_402_response(response_object)      
       else
-        settle_payment(payment_header, options)
+        settle_payment(payment_header, response_object)
       end
     end
 
-    class_methods do
-      def skip_paywall_enforcement(**options)
-        skip_before_action :enforce_paywall, **options
-      end
-    end
+    # class_methods do
+    #   def skip_paywall_enforcement(**options)
+    #     skip_before_action :enforce_paywall, **options
+    #   end
+    # end
 
     private
 
@@ -35,32 +36,31 @@ module Instapay
     #   end
     # end
 
-    def render_payment_required(options = {})
-      raise ArgumentError.new("amount is required") unless options[:amount].present?
-
-      response_object = generate_required_payment(options)
-
-      render_402_response(response_object)
-    end
-
     def render_402_response(response_object)
       response.headers['PAYMENT-REQUIRED'] = Base64.strict_encode64(response_object.to_json)
       render json: {error: "Payment required"}, status: :payment_required
     end
 
     def generate_required_payment(options)
+      # Basic validation: ensure required parameters are present
+      raise ArgumentError.new("amount is required") unless options[:amount].present?
+
       updated_options = options.merge({
         resource: request.original_url,
         description: "Payment required to access #{request.path}",
       })
 
-      #note -- add error handling here in case of an error generating the response object
-
       puts "Generating payment required response with options: #{updated_options.inspect}"
-      Instapay::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
+      
+      begin
+        Instapay::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
+      rescue Instapay::ClientMessaging::InvalidPaymentOptionsError => e
+        # Re-raise as ArgumentError so it's clear to the developer what went wrong
+        raise ArgumentError.new("Invalid payment options: #{e.message}")
+      end
     end
 
-    def settle_payment(payment_header, options)
+    def settle_payment(payment_header, required_payment)
       # payment header is base64 encode signed authorization payload
       # options is a hash including an amount and other optional values
 
@@ -68,7 +68,7 @@ module Instapay
       payment_payload = decode_header(payment_header)
 
       # generate payment requirement details based on options provided
-      required_payment = generate_required_payment(options)
+      # required_payment = generate_required_payment(options)
       
       # Build and validate settlement request object
       # This finds a matching accept and raises InvalidSettlementRequestError if:

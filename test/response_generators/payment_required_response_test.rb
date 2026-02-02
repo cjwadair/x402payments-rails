@@ -82,4 +82,69 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     assert_equal accepts, response[:accepts]
   end
 
+  test "normalizes amount by stripping symbols and whitespace" do
+    options = @options.merge(amount: " $1,234.56 ")
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+    normalized = instance.send(:normalize_options!, options)
+    
+    assert_equal "1234.56", normalized[:amount]
+  end
+
+  test "normalizes chain to CAIP2 format if needed" do
+    options = @options.merge(chain: "base-sepolia")
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+    normalized = instance.send(:normalize_options!, options)
+    
+    assert_equal "eip155:84532", normalized[:chain]
+  end
+
+  test "normalizes currency to uppercase" do
+    options = @options.merge(currency: "usdc")
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+    normalized = instance.send(:normalize_options!, options)
+    
+    assert_equal "USDC", normalized[:currency]
+  end
+
+  test "validates amount is numeric and positive" do
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+
+    invalid_options = @options.merge(amount: "invalid")
+    assert_raises(Instapay::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_options)
+    end
+
+    negative_options = @options.merge(amount: -5)
+    assert_raises(Instapay::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, negative_options)
+    end
+  end
+
+  test "validates chain is supported" do
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+
+    unsupported_options = @options.merge(chain: "unsupported_chain")
+    assert_raises(Instapay::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, unsupported_options)
+    end
+  end
+
+  test "validates currency is a string" do
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+
+    invalid_options = @options.merge(currency: 123)
+    assert_raises(Instapay::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_options)
+    end
+  end
+
+  test "validates wallet_address format" do
+    instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
+
+    invalid_options = @options.merge(wallet_address: :symbol)
+    assert_raises(Instapay::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_options)
+    end
+  end
+
 end
