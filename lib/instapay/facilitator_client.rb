@@ -9,12 +9,20 @@ module Instapay
     end
 
     def verify_payment(payment_payload, payment_requirements) 
+      validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
+
+      ::Rails.logger.info("=== X402 Verify Request ===")
+      ::Rails.logger.info("URL: #{@facilitator_url}/verify")
+      ::Rails.logger.info("Request body: #{request_body}")
       
       response = connection.post("verify") do |req|
         req.headers["Content-Type"] = "application/json"
         req.body = request_body
       end
+
+      ::Rails.logger.info("Response status: #{response.status}")
+      ::Rails.logger.info("Response body: #{response.body}")
 
       handle_response(response, "verify")
     rescue Faraday::Error => e
@@ -22,6 +30,7 @@ module Instapay
     end
 
     def settle_payment(payment_payload, payment_requirements)
+      validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
       
       response = connection.post("settle") do |req|
@@ -84,11 +93,66 @@ module Instapay
     end
 
     def request_body(payload, requirements)
+      
       {
         x402Version: 2,
+        authorization: payload[:authorization],
+        signature: payload[:signature],
+        payload: payload,
         paymentPayload: payload,
         paymentRequirements: requirements
       }.to_json
+    end
+
+    def validate_request(payment_payload, payment_requirements)
+      # Validate payment payload
+      raise InvalidPaymentError, "Payment payload cannot be nil" if payment_payload.nil?
+      raise InvalidPaymentError, "Payment payload must be a Hash" unless payment_payload.is_a?(Hash)
+      
+      # Validate authorization
+      authorization = payment_payload[:payload][:authorization] || payment_payload["authorization"]
+      raise InvalidPaymentError, "Payment payload missing 'authorization'" if authorization.nil?
+      
+      validate_authorization(authorization)
+      
+      # Validate signature
+      signature = payment_payload[:payload][:signature] || payment_payload["signature"]
+      raise InvalidPaymentError, "Payment payload missing 'signature'" if signature.nil? || signature.to_s.empty?
+      
+      # Validate payment requirements
+      raise InvalidPaymentError, "Payment requirements cannot be nil" if payment_requirements.nil?
+      raise InvalidPaymentError, "Payment requirements must be a Hash" unless payment_requirements.is_a?(Hash)
+      
+      validate_payment_requirements(payment_requirements)
+    end
+
+    def validate_authorization(authorization)
+      raise InvalidPaymentError, "Authorization must be a Hash" unless authorization.is_a?(Hash)
+      
+      required_fields = [:from, :to, :value, :validAfter, :validBefore, :nonce]
+      required_fields.each do |field|
+        value = authorization[field] || authorization[field.to_s]
+        if value.nil? || value.to_s.empty?
+          raise InvalidPaymentError, "Authorization missing required field '#{field}'"
+        end
+      end
+    end
+
+    def validate_payment_requirements(requirements)
+      required_fields = [:scheme, :network, :amount, :asset, :payTo]
+      required_fields.each do |field|
+        value = requirements[field] || requirements[field.to_s]
+        if value.nil? || value.to_s.empty?
+          raise InvalidPaymentError, "Payment requirements missing required field '#{field}'"
+        end
+      end
+      
+      # Validate scheme is a known value
+      scheme = requirements[:scheme] || requirements["scheme"]
+      valid_schemes = ["exact", "range", "minimum"]
+      unless valid_schemes.include?(scheme.to_s)
+        raise InvalidPaymentError, "Invalid scheme '#{scheme}'. Must be one of: #{valid_schemes.join(', ')}"
+      end
     end
   end
 

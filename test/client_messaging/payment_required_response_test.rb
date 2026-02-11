@@ -36,38 +36,6 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     assert response[:x402Version]
   end
 
-  test "build_response creates response object with accepts array" do
-    accepts = ["base64encoded1", "base64encoded2"]
-    resource_url = "https://example.com/api/content"
-    description = "Premium content access"
-    
-    response = Instapay::ClientMessaging::PaymentRequiredResponse.build_response(
-      accepts: accepts,
-      resource_url: resource_url,
-      description: description
-    )
-    
-    assert_equal 2, response[:x402Version]
-    assert_equal "Payment required to access this resource", response[:error]
-    assert_equal resource_url, response[:resource][:url]
-    assert_equal description, response[:resource][:description]
-    assert_equal "application/json", response[:resource][:mimeType]
-    assert_equal accepts, response[:accepts]
-  end
-
-  test "build_response uses default description when nil" do
-    accepts = ["base64encoded1"]
-    resource_url = "https://example.com/api/content"
-    
-    response = Instapay::ClientMessaging::PaymentRequiredResponse.build_response(
-      accepts: accepts,
-      resource_url: resource_url,
-      description: nil
-    )
-    
-    assert_equal "Payment required to access #{resource_url}", response[:resource][:description]
-  end
-
   test "build_response_object is publicly accessible" do
     instance = Instapay::ClientMessaging::PaymentRequiredResponse.new
     accepts = ["base64encoded1"]

@@ -7,14 +7,6 @@ module Instapay
         new.generate(options)
       end
 
-      def self.build_response(accepts:, resource_url:, description: nil)
-        new.build_response_object(
-          accepts: accepts,
-          resource_url: resource_url,
-          description: description
-        )
-      end
-
       def generate(options = {})
         normalized_options = normalize_options!(options)
         validate_options!(normalized_options)

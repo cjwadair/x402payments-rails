@@ -16,8 +16,8 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     assert_equal "eip155:84532", response[:network]
     assert_equal "1500000", response[:amount] # 1.50 * 10^6
     assert_equal "0x036CbD53842c5426634e7929541eC2318f3dCF7e", response[:asset]
-    assert_equal Instapay.configuration.wallet_address, response[:pay_to]
-    assert_equal 600, response[:max_timeout_seconds]
+    assert_equal Instapay.configuration.wallet_address, response[:payTo]
+    assert_equal 600, response[:maxTimeoutSeconds]
     assert response[:extra].is_a?(Hash)
     assert_equal "USDC", response[:extra][:name]
     assert_equal "2", response[:extra][:version]
@@ -29,7 +29,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     
     response = @formatter.format(payment, options)
     
-    assert_equal "0xCustomWallet", response[:pay_to]
+    assert_equal "0xCustomWallet", response[:payTo]
   end
 
   test "formats payment with custom wallet address from payment" do
@@ -38,7 +38,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     
     response = @formatter.format(payment, options)
     
-    assert_equal "0xPaymentWallet", response[:pay_to]
+    assert_equal "0xPaymentWallet", response[:payTo]
   end
 
   test "converts amount to atomic units correctly" do

@@ -66,9 +66,6 @@ module Instapay
 
       # decode payment header received from client
       payment_payload = decode_header(payment_header)
-
-      # generate payment requirement details based on options provided
-      # required_payment = generate_required_payment(options)
       
       # Build and validate settlement request object
       # This finds a matching accept and raises InvalidSettlementRequestError if:
@@ -105,7 +102,7 @@ module Instapay
       if settlement_response["success"]
         #payment settled successfully -- allow access to resource
         puts "Payment settled successfully: #{settlement_response.inspect}"
-        render json: settlement_response[:body], status: :ok
+        # render json: settlement_response[:body], status: :ok
       else
         #payment settlement failed -- respond with payment required
         return render_402_response(required_payment)
@@ -124,13 +121,5 @@ module Instapay
       end
     end
 
-    def set_payment_processing_attrs(matching_accept, resource = {})
-      additional_attrs = {version: 2}
-      additional_attrs[:resource_url] = resource[:url] if resource[:url]
-      additional_attrs[:resource_description] = resource[:description] if resource[:description]
-      additional_attrs[:resource_mime_type] = resource[:mimeType] if resource[:mimeType]
-
-      matching_accept.merge(additional_attrs)
-    end
   end
 end

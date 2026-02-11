@@ -1,5 +1,6 @@
 module Instapay
   module FacilitatorMessaging
+    
     class InvalidSettlementRequestError < StandardError; end
 
     class SettlementRequest
@@ -16,14 +17,19 @@ module Instapay
       end
 
       def generate
+
+        puts "Payload: #{payload.inspect}"
+        puts "accepted payments: #{accepted_payments.inspect}"
+
         find_matching_accept!
         validate_inputs!
 
+        formatted_payload = build_formatted_payload
         payment_requirements = build_requirements_object
 
         {
-          x402Version:2,
-          paymentPayload: payload,
+          x402Version: 2,
+          paymentPayload: formatted_payload,
           paymentRequirements: payment_requirements
         }
       end
@@ -31,12 +37,18 @@ module Instapay
       private
 
       def find_matching_accept!
+        client_accepts = payload[:accepted]
+
+        unless client_accepts
+          raise InvalidSettlementRequestError, "Missing accepted payment info in payload"
+        end
+
         @matching_accept = accepted_payments.find do |accept|
-          accept[:scheme] == payload[:accepted][:scheme] &&
-          accept[:network] == payload[:accepted][:network] &&
-          accept[:amount].to_s == payload[:accepted][:amount].to_s &&
-          accept[:asset] == payload[:accepted][:asset] &&
-          accept[:pay_to] == payload[:accepted][:pay_to]
+          accept[:scheme] == client_accepts[:scheme] &&
+          accept[:network] == client_accepts[:network] &&
+          accept[:amount].to_s == client_accepts[:amount].to_s &&
+          accept[:asset] == client_accepts[:asset] &&
+          accept[:payTo] == client_accepts[:payTo]
         end
 
         unless @matching_accept
@@ -45,8 +57,15 @@ module Instapay
       end
 
       def validate_inputs!
+
+        authorization = payload[:payload][:authorization]
+        
+        unless authorization
+          raise InvalidSettlementRequestError, "Missing authorization in payload"
+        end
+
         # Validate scheme
-        payload_scheme = payload[:accepted][:scheme] || payload.scheme
+        payload_scheme = payload[:accepted][:scheme]
         requirements_scheme = matching_accept[:scheme] || "exact"
         
         unless payload_scheme == requirements_scheme
@@ -61,13 +80,15 @@ module Instapay
         # For EVM chains, validate recipient and amount locally before sending to facilitator
         # For Solana chains, the facilitator handles all validation of the transaction
         if Instapay.evm_chain?(matching_accept[:network])
+          #TODO -- Determine what else needs to be validated here before sending to the facilitator for validation -- need to make sure facilitator handles checking signature from and auth validity, etc
           # Validate recipient address
-          unless payload[:accepted][:to]&.downcase == matching_accept[:pay_to]&.downcase
-            raise InvalidSettlementRequestError, "Recipient mismatch: expected #{matching_accept[:pay_to]}, got #{payload[:accepted][:to]}"
+          
+          unless authorization[:to]&.downcase == matching_accept[:payTo]&.downcase
+            raise InvalidSettlementRequestError, "Recipient mismatch: expected #{matching_accept[:payTo]}, got #{authorization[:to]}"
           end
 
           # Validate amount
-          payment_value = payload[:accepted][:value].to_i
+          payment_value = authorization[:value].to_i
           required_value = matching_accept[:amount].to_i
 
           if payment_value < required_value
@@ -84,13 +105,23 @@ module Instapay
       def build_requirements_object
         {
           scheme: matching_accept[:scheme] || "exact",
-          network: format_network(matching_accept[:network]),
+          network: matching_accept[:network],
           amount: matching_accept[:amount].to_s,
           asset: matching_accept[:asset],
-          payTo: matching_accept[:pay_to],
-          maxTimeoutSeconds: matching_accept[:max_timeout_seconds],
+          payTo: matching_accept[:payTo],
+          maxTimeoutSeconds: matching_accept[:maxTimeoutSeconds],
           extra: matching_accept[:extra]
         }.compact
+      end
+
+      def build_formatted_payload
+        {
+          x402Version: 2,
+          accepted: payload[:accepted],
+          payload: payload[:payload],
+          extensions: {},
+          resource: payload[:resource]
+        }
       end
 
       def format_network(network)

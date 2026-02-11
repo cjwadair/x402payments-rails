@@ -14,8 +14,8 @@ module Instapay
           network: formatted_network,
           amount: atomic_amount.to_s,
           asset: asset_address,
-          pay_to: wallet_address,
-          max_timeout_seconds: 600,
+          payTo: wallet_address,
+          maxTimeoutSeconds: 600,
           extra: extra_data
         }
 
