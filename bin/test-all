@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Test all supported Rails versions with optional file filter
+
+test_file = ARGV[0]
+versions = ["rails-7.2", "rails-8.0", "rails-8.1"]
+failed = []
+
+def colorize(text, code)
+  "\e[#{code}m#{text}\e[0m"
+end
+
+versions.each do |version|
+  puts "\n" + "=" * 60
+  puts colorize("Testing #{version.upcase}", "1;36")
+  puts "=" * 60 + "\n"
+  
+  gemfile_version = version.gsub('-', '_')
+  cmd = if test_file
+    "BUNDLE_GEMFILE=gemfiles/#{gemfile_version}.gemfile bundle exec ruby -Itest #{test_file}"
+  else
+    "BUNDLE_GEMFILE=gemfiles/#{gemfile_version}.gemfile bundle exec rake test"
+  end
+  
+  system(cmd)
+  
+  if $?.exitstatus != 0
+    failed << version
+  end
+end
+
+puts "\n" + "=" * 60
+if failed.empty?
+  puts colorize("✓ All versions passed!", "1;32")
+else
+  puts colorize("✗ Failed versions: #{failed.join(', ')}", "1;31")
+  exit 1
+end
+puts "=" * 60 + "\n"

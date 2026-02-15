@@ -8,3 +8,7 @@
 /test/dummy/log/*.log
 /test/dummy/storage/
 /test/dummy/tmp/
+
+# Appraisal generated directories (keep .lock files)
+/gemfiles/*.bundle
+/gemfiles/vendor

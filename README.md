@@ -21,6 +21,18 @@ Or install it yourself as:
 $ gem install instapay
 ```
 
+## testing
+
+To test against the latest version of rails during development:
+```bash
+bin/test
+```
+
+To test against all supported version of rails before pushing to production
+```bash
+bin/test-all
+```
+
 ## Contributing
 Contribution directions go here.
 
