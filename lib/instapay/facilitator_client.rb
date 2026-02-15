@@ -105,53 +105,34 @@ module Instapay
     end
 
     def validate_request(payment_payload, payment_requirements)
-      # Validate payment payload
       raise InvalidPaymentError, "Payment payload cannot be nil" if payment_payload.nil?
       raise InvalidPaymentError, "Payment payload must be a Hash" unless payment_payload.is_a?(Hash)
-      
-      # Validate authorization
-      authorization = payment_payload[:payload][:authorization] || payment_payload["authorization"]
-      raise InvalidPaymentError, "Payment payload missing 'authorization'" if authorization.nil?
-      
-      validate_authorization(authorization)
-      
-      # Validate signature
-      signature = payment_payload[:payload][:signature] || payment_payload["signature"]
-      raise InvalidPaymentError, "Payment payload missing 'signature'" if signature.nil? || signature.to_s.empty?
-      
-      # Validate payment requirements
+
+      payload_section = payment_payload[:payload] || payment_payload["payload"]
+      if payload_section.nil?
+        raise InvalidPaymentError, "Payment payload missing 'payload'"
+      end
+      unless payload_section.is_a?(Hash)
+        raise InvalidPaymentError, "Payment payload 'payload' must be a Hash"
+      end
+
+      accepted = payment_payload[:accepted] || payment_payload["accepted"]
+      if accepted.nil?
+        raise InvalidPaymentError, "Payment payload missing 'accepted'"
+      end
+      unless accepted.is_a?(Hash)
+        raise InvalidPaymentError, "Payment payload 'accepted' must be a Hash"
+      end
+
       raise InvalidPaymentError, "Payment requirements cannot be nil" if payment_requirements.nil?
       raise InvalidPaymentError, "Payment requirements must be a Hash" unless payment_requirements.is_a?(Hash)
-      
-      validate_payment_requirements(payment_requirements)
-    end
 
-    def validate_authorization(authorization)
-      raise InvalidPaymentError, "Authorization must be a Hash" unless authorization.is_a?(Hash)
-      
-      required_fields = [:from, :to, :value, :validAfter, :validBefore, :nonce]
-      required_fields.each do |field|
-        value = authorization[field] || authorization[field.to_s]
-        if value.nil? || value.to_s.empty?
-          raise InvalidPaymentError, "Authorization missing required field '#{field}'"
-        end
-      end
-    end
-
-    def validate_payment_requirements(requirements)
       required_fields = [:scheme, :network, :amount, :asset, :payTo]
       required_fields.each do |field|
-        value = requirements[field] || requirements[field.to_s]
+        value = payment_requirements[field] || payment_requirements[field.to_s]
         if value.nil? || value.to_s.empty?
           raise InvalidPaymentError, "Payment requirements missing required field '#{field}'"
         end
-      end
-      
-      # Validate scheme is a known value
-      scheme = requirements[:scheme] || requirements["scheme"]
-      valid_schemes = ["exact", "range", "minimum"]
-      unless valid_schemes.include?(scheme.to_s)
-        raise InvalidPaymentError, "Invalid scheme '#{scheme}'. Must be one of: #{valid_schemes.join(', ')}"
       end
     end
   end

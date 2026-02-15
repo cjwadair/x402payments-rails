@@ -244,46 +244,34 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     assert_match(/Payment payload must be a Hash/, error.message)
   end
 
-  test "raises error when payment payload missing authorization" do
+  test "raises error when payment payload missing accepted" do
     invalid_payload = { payload:{signature: "0x123..."} }
-    
+
     error = assert_raises Instapay::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
     end
-    
-    assert_match(/Payment payload missing 'authorization'/, error.message)
+
+    assert_match(/Payment payload missing 'accepted'/, error.message)
   end
 
-  test "raises error when payment payload missing signature" do
-    invalid_payload = { payload:{authorization: @payload[:payload][:authorization]} }
-    
+  test "raises error when payment payload missing payload section" do
+    invalid_payload = { accepted: @payload[:accepted] }
+
     error = assert_raises Instapay::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
     end
-    
-    assert_match(/Payment payload missing 'signature'/, error.message)
+
+    assert_match(/Payment payload missing 'payload'/, error.message)
   end
 
-  test "raises error when authorization missing required field" do
-    invalid_payload = {
-      payload:{
-        authorization: {
-          from: "0x07B88Fa6bAA91384D07Ae419a08FdeC7e8908D2e",
-          to: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
-          # value is missing
-          validAfter: "1769958357",
-          validBefore: "1769959257",
-          nonce: "0x34567890123456..."
-        },
-        signature: "0x1234567890abcdef..."
-      }
-    }
-    
+  test "raises error when payment payload accepted is not a hash" do
+    invalid_payload = { payload: @payload[:payload], accepted: "invalid" }
+
     error = assert_raises Instapay::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
     end
-    
-    assert_match(/Authorization missing required field 'value'/, error.message)
+
+    assert_match(/Payment payload 'accepted' must be a Hash/, error.message)
   end
 
   test "raises error when payment requirements is nil" do
@@ -310,16 +298,6 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     assert_match(/Payment requirements missing required field 'asset'/, error.message)
   end
 
-  test "raises error when payment requirements has invalid scheme" do
-    invalid_requirements = @payment_requirements.merge(scheme: "invalid_scheme")
-    
-    error = assert_raises Instapay::InvalidPaymentError do
-      @client.verify_payment(@payload, invalid_requirements)
-    end
-    
-    assert_match(/Invalid scheme 'invalid_scheme'/, error.message)
-    assert_match(/Must be one of: exact, range, minimum/, error.message)
-  end
 
   test "validation accepts string keys in addition to symbol keys" do
     skip "temporarily disabled"

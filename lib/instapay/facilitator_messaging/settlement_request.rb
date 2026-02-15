@@ -64,24 +64,24 @@ module Instapay
           raise InvalidSettlementRequestError, "Missing authorization in payload"
         end
 
-        # Validate scheme
-        payload_scheme = payload[:accepted][:scheme]
-        requirements_scheme = matching_accept[:scheme] || "exact"
-        
-        unless payload_scheme == requirements_scheme
-          raise InvalidSettlementRequestError, "Scheme mismatch: expected #{requirements_scheme}, got #{payload_scheme}"
-        end
-
-        # Validate network
-        unless payload[:accepted][:network] == matching_accept[:network]
-          raise InvalidSettlementRequestError, "Network mismatch: expected #{matching_accept[:network]}, got #{payload[:accepted][:network]}"
-        end
-
         # For EVM chains, validate recipient and amount locally before sending to facilitator
         # For Solana chains, the facilitator handles all validation of the transaction
         if Instapay.evm_chain?(matching_accept[:network])
           #TODO -- Determine what else needs to be validated here before sending to the facilitator for validation -- need to make sure facilitator handles checking signature from and auth validity, etc
           # Validate recipient address
+
+          # Validate scheme
+          payload_scheme = payload[:accepted][:scheme]
+          requirements_scheme = matching_accept[:scheme] || "exact"
+          
+          unless payload_scheme == requirements_scheme
+            raise InvalidSettlementRequestError, "Scheme mismatch: expected #{requirements_scheme}, got #{payload_scheme}"
+          end
+
+          # Validate network
+          unless payload[:accepted][:network] == matching_accept[:network]
+            raise InvalidSettlementRequestError, "Network mismatch: expected #{matching_accept[:network]}, got #{payload[:accepted][:network]}"
+          end
           
           unless authorization[:to]&.downcase == matching_accept[:payTo]&.downcase
             raise InvalidSettlementRequestError, "Recipient mismatch: expected #{matching_accept[:payTo]}, got #{authorization[:to]}"

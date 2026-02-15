@@ -33,8 +33,8 @@ module Instapay
 
         if custom
           custom
-        elsif currency.upcase == "USDC" && Instapay::CURRENCY_BY_CHAIN[chain_name]
-          Instapay::CURRENCY_BY_CHAIN[chain_name]
+        elsif currency.upcase == "USDC" && Instapay::Chains::CURRENCY_BY_CHAIN[chain_name]
+          Instapay::Chains::CURRENCY_BY_CHAIN[chain_name]
         else
           raise Instapay::ConfigurationError, "Unknown token #{currency} for chain #{chain_name}. Register with config.register_token()"
         end
@@ -48,7 +48,7 @@ module Instapay
         return custom[:address] if custom
 
         if currency.upcase == "USDC"
-          builtin = Instapay::CHAINS[chain_name]
+          builtin = Instapay::Chains::CHAINS[chain_name]
           return builtin[:usdc_address] if builtin && builtin[:usdc_address]
         end
 
@@ -71,7 +71,7 @@ module Instapay
       end
 
       def format_network(chain)
-        caip2 = Instapay::CAIP2_MAPPING[chain]
+        caip2 = Instapay::Chains::CAIP2_MAPPING[chain]
         raise Instapay::ConfigurationError, "Unknown chain #{chain}. Register with config.register_chain()" unless caip2
         caip2
       end

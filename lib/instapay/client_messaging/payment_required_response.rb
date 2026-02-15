@@ -12,14 +12,19 @@ module Instapay
         validate_options!(normalized_options)
         
         accepted_payments = build_accepted_payments_object(normalized_options)
+        
         response = build_response_object(
           accepts: accepted_payments,
           resource_url: normalized_options[:resource],
           description: normalized_options[:description]
         )
+
         puts "x402 response object: #{response.inspect}"
+        
         response
       end
+
+      private
 
       def build_response_object(accepts:, resource_url:, description:)
         {
@@ -33,8 +38,6 @@ module Instapay
           accepts: accepts
         }
       end
-
-      private
 
       def normalize_options!(options)
         normalized = options.dup

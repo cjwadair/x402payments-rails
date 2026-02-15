@@ -80,27 +80,6 @@ module Instapay
       @custom_chains[name]
     end
 
-    class << self
-      attr_writer :configuration
-
-      def configuration
-        @configuration ||= Configuration.new
-      end
-
-      #initializes the configuration object and yields it to a block for setting config options
-      #triggered when user sets the initializers/instapay.rb file
-      def configure
-        yield(configuration)
-        #call validate on initialization
-        configuration.validate!
-      end
-
-      def reset_configuration!
-        @configuration = Configuration.new
-      end
-
-    end
-
   end
 
   class ConfigurationError < StandardError; end
