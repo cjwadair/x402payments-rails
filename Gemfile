@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in instapay.gemspec.
+# Specify your gem's dependencies in x402payments-rails.gemspec.
 gemspec
 
 gem "puma"

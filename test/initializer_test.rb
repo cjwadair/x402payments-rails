@@ -2,7 +2,7 @@ require "test_helper"
 
 class InitializerTest < ActiveSupport::TestCase
   test "dummy app initializer sets configuration values correctly" do
-    config = Instapay.configuration
+    config = X402Payments.configuration
 
     # Test that configuration values from the initializer are set
     assert_equal "0x0613da3bd559d9ecc5a662fb517ff979cde3e78d", config.wallet_address
@@ -23,7 +23,7 @@ class InitializerTest < ActiveSupport::TestCase
     # The actual env vars would need to be set before Rails loads
     # This test just validates the current state matches expected defaults
     
-    config = Instapay.configuration
+    config = X402Payments.configuration
     
     # Since no custom ENV vars are set in test, these should be the defaults
     assert_equal ENV.fetch("X402_WALLET_ADDRESS", '0x0613da3bd559d9ecc5a662fb517ff979cde3e78d'), 

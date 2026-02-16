@@ -51,8 +51,8 @@ class PremiumContentTest < ActionDispatch::IntegrationTest
     facilitator_client.expect(:settle_payment, {"success" => true}, [Hash, Hash])
 
     Api::PremiumContentController.any_instance.stub(:settle_payment, {"success" => true}) do
-      Instapay::FacilitatorMessaging::SettlementRequest.stub :new, settlement_request_double do
-        Instapay::FacilitatorClient.stub :new, facilitator_client do
+      X402Payments::FacilitatorMessaging::SettlementRequest.stub :new, settlement_request_double do
+        X402Payments::FacilitatorClient.stub :new, facilitator_client do
           get "/api/premium_content/paywalled_info", headers: {"PAYMENT-SIGNATURE" => valid_signature}
           assert_response :success
           json_response = JSON.parse(response.body)

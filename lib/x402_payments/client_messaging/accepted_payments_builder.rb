@@ -1,4 +1,4 @@
-module Instapay
+module X402Payments
   module ClientMessaging
     class AcceptedPaymentsBuilder
       def self.build(options = {})

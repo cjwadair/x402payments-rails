@@ -3,7 +3,7 @@ require "test_helper"
 class ConfigurationTest < ActiveSupport::TestCase
 
   test "initializes with default values" do
-    config = Instapay::Configuration.new
+    config = X402Payments::Configuration.new
     assert_equal "base-sepolia", config.chain
     assert_equal "USDC", config.currency
     assert_nil config.wallet_address
@@ -11,7 +11,7 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "allows setting and getting configuration options" do
-    config = Instapay::Configuration.new
+    config = X402Payments::Configuration.new
     config.chain = "avalanche"
     config.currency = "ETH"
     config.wallet_address = "0xMerchantWalletAddress"
@@ -21,7 +21,7 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "accepts method adds accepted payment options" do
-    config = Instapay::Configuration.new
+    config = X402Payments::Configuration.new
     config.accept(chain: "solana", currency: "USDC", wallet_address: "SolanaWalletAddress")
     assert_equal 1, config.accepted_payments.size
     payment = config.accepted_payments.first
@@ -31,7 +31,7 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "default_accepted_payments returns correct defaults" do
-    config = Instapay::Configuration.new
+    config = X402Payments::Configuration.new
     defaults = config.default_accepted_payments
     assert_equal 1, defaults.size
     payment = defaults.first
@@ -41,7 +41,7 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "registers and retrieves custom token configurations" do
-    Instapay.configure do |config|
+    X402Payments.configure do |config|
       config.register_token(
         chain: "base",
         symbol: "ETH",
@@ -52,7 +52,7 @@ class ConfigurationTest < ActiveSupport::TestCase
       )
     end
 
-    token_config = Instapay.configuration.token_config("base", "ETH")
+    token_config = X402Payments.configuration.token_config("base", "ETH")
     assert_not_nil token_config
     assert_equal "0xCustomETHAddress", token_config[:address]
     assert_equal 6, token_config[:decimals]
@@ -61,7 +61,7 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "registers and retrieves custom chain configurations" do
-    Instapay.configure do |config|
+    X402Payments.configure do |config|
       config.register_chain(
         name: "custom-chain",
         chain_id: 12345,
@@ -69,15 +69,15 @@ class ConfigurationTest < ActiveSupport::TestCase
       )
     end
 
-    chain_config = Instapay.configuration.chain_config("custom-chain")
+    chain_config = X402Payments.configuration.chain_config("custom-chain")
     assert_not_nil chain_config
     assert_equal 12345, chain_config[:chain_id]
     assert_equal "eip155", chain_config[:standard]
   end
 
   test "raises error registering unsupported chain standard" do
-    Instapay.configure do |config|
-      assert_raises(Instapay::ConfigurationError) do
+    X402Payments.configure do |config|
+      assert_raises(X402Payments::ConfigurationError) do
         config.register_chain(
           name: "unsupported-chain",
           chain_id: 99999,
@@ -88,7 +88,7 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "multiple accepted payments are stored correctly" do
-    config = Instapay::Configuration.new
+    config = X402Payments::Configuration.new
     config.accept(chain: "base-sepolia", currency: "USDC")
     config.accept(chain: "polygon", currency: "MATIC", wallet_address: "PolygonWalletAddress")
     assert_equal 2, config.accepted_payments.size
@@ -105,17 +105,17 @@ class ConfigurationTest < ActiveSupport::TestCase
   end
 
   test "token_config returns nil for unregistered tokens" do
-    token_config = Instapay.configuration.token_config("nonexistent-chain", "NONEXISTENT")
+    token_config = X402Payments.configuration.token_config("nonexistent-chain", "NONEXISTENT")
     assert_nil token_config
   end
 
   test "chain_config returns nil for unregistered chains" do
-    chain_config = Instapay.configuration.chain_config("nonexistent-chain")
+    chain_config = X402Payments.configuration.chain_config("nonexistent-chain")
     assert_nil chain_config
   end
 
   test "default_accepted_payments uses configured accepted payments when present" do
-    config = Instapay::Configuration.new
+    config = X402Payments::Configuration.new
     config.chain = "base-sepolia"
     config.currency = "USDC"
     config.wallet_address = "0xMerchantWalletAddress"

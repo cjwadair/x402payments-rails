@@ -2,7 +2,7 @@ require "test_helper"
 
 class FacilitatorClientTest < ActiveSupport::TestCase
   def setup
-    @client = Instapay::FacilitatorClient.new
+    @client = X402Payments::FacilitatorClient.new
 
     @payload = {
       x402Version: 2,
@@ -54,7 +54,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
   test "fetches supported networks from facilitator" do
     # Stub the facilitator response
-    stub_request(:get, "#{Instapay.configuration.facilitator_url}/supported")
+    stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(
         status: 200, 
         body: {
@@ -89,10 +89,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   end
 
   test "handles 500 series errors correctly" do
-    stub_request(:get, "#{Instapay.configuration.facilitator_url}/supported")
+    stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 500)
     
-    error = assert_raises Instapay::FacilitatorError do
+    error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
     
@@ -100,10 +100,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   end
 
   test "400 response raises expected error correctly" do
-    stub_request(:get, "#{Instapay.configuration.facilitator_url}/supported")
+    stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 400, body: { error: "Bad Request" }.to_json)
 
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.supported_networks
     end
     
@@ -111,10 +111,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   end
 
   test 'handles unexpected response codes correctly' do
-    stub_request(:get, "#{Instapay.configuration.facilitator_url}/supported")
+    stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 302)
     
-    error = assert_raises Instapay::FacilitatorError do
+    error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
     
@@ -122,10 +122,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   end
 
   test "handles invalid JSON response correctly" do
-    stub_request(:get, "#{Instapay.configuration.facilitator_url}/supported")
+    stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 200, body: "Invalid JSON") 
     
-    error = assert_raises Instapay::FacilitatorError do
+    error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
     
@@ -134,7 +134,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
   test "builds payment verification request and receives valid response" do
     VCR.turned_off do
-      stub_request(:post, "#{Instapay.configuration.facilitator_url}/verify")
+      stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
         .to_return(status: 200, body: @expected_response_body.to_json)
         
       response = @client.verify_payment(@payload, @payment_requirements)
@@ -145,7 +145,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   
   test "builds payment request and receives valid response when submitting payment" do
     VCR.turned_off do
-      stub_request(:post, "#{Instapay.configuration.facilitator_url}/settle")
+      stub_request(:post, "#{X402Payments.configuration.facilitator_url}/settle")
         .to_return(status: 200, body: @expected_response_body.to_json)
         
       response = @client.settle_payment(@payload, @payment_requirements)
@@ -183,10 +183,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       # payer field is missing
     }
 
-    stub_request(:post, "#{Instapay.configuration.facilitator_url}/verify")
+    stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: invalid_response.to_json)
     
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, @payment_requirements)
     end
     
@@ -200,10 +200,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       payer: "0x07B88Fa6bAA91384D07A..."
     }
 
-    stub_request(:post, "#{Instapay.configuration.facilitator_url}/verify")
+    stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: invalid_response.to_json)
     
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, @payment_requirements)
     end
     
@@ -217,10 +217,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       payer: "0x07B88Fa6bAA91384D07A..."
     }
 
-    stub_request(:post, "#{Instapay.configuration.facilitator_url}/verify")
+    stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: invalid_response.to_json)
     
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, @payment_requirements)
     end
     
@@ -229,7 +229,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
   # Request validation tests
   test "raises error when payment payload is nil" do
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(nil, @payment_requirements)
     end
     
@@ -237,7 +237,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   end
 
   test "raises error when payment payload is not a hash" do
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment("invalid", @payment_requirements)
     end
     
@@ -247,7 +247,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   test "raises error when payment payload missing accepted" do
     invalid_payload = { payload:{signature: "0x123..."} }
 
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
     end
 
@@ -257,7 +257,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   test "raises error when payment payload missing payload section" do
     invalid_payload = { accepted: @payload[:accepted] }
 
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
     end
 
@@ -267,7 +267,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   test "raises error when payment payload accepted is not a hash" do
     invalid_payload = { payload: @payload[:payload], accepted: "invalid" }
 
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
     end
 
@@ -275,7 +275,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   end
 
   test "raises error when payment requirements is nil" do
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, nil)
     end
     
@@ -291,7 +291,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D"
     }
     
-    error = assert_raises Instapay::InvalidPaymentError do
+    error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, invalid_requirements)
     end
     
@@ -339,7 +339,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       "payTo" => "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D"
     }
     
-    stub_request(:post, "#{Instapay.configuration.facilitator_url}/verify")
+    stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: @expected_response_body.to_json)
     
     # Should not raise an error
@@ -362,8 +362,8 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         Rails.logger.level = Logger::INFO
         
         puts "\n=== Making API Request ==="
-        puts "URL: #{Instapay.configuration.facilitator_url}/verify"
-        puts "Full X402 Request:"
+        puts "URL: #{X402Payments.configuration.facilitator_url}/verify"
+        puts "Full X402Payments Request:"
         puts JSON.pretty_generate(@payload)
         
         response = @client.verify_payment(@payload, @payment_requirements)
@@ -378,7 +378,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         # Log the response for inspection
         puts "\n=== Live API Response (SUCCESS) ==="
         puts JSON.pretty_generate(response)
-      rescue Instapay::InvalidPaymentError => e
+      rescue X402Payments::InvalidPaymentError => e
         puts "\n=== API REJECTED PAYMENT ==="
         puts "Error: #{e.message}"
         puts "\nThis is expected with dummy test data."
@@ -389,7 +389,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         puts "3. Current timestamps for validAfter/validBefore"
         puts "\nCheck the logs above for the actual API response."
         raise e
-      rescue Instapay::FacilitatorError => e
+      rescue X402Payments::FacilitatorError => e
         puts "\n=== FACILITATOR ERROR ==="
         puts "Error: #{e.message}"
         puts "\nA 500 error means the facilitator API had a server error."

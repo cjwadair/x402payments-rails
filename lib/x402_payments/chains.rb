@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Instapay
+module X402Payments
 	module Chains
 		# Chain configurations for supported networks
 		CHAINS = {
@@ -100,11 +100,11 @@ module Instapay
 		end
 
 		def supported_chains
-			(CHAINS.keys + configuration.custom_chains.keys).map { |k| Instapay.to_caip2(k) }
+			(CHAINS.keys + configuration.custom_chains.keys).map { |k| X402Payments.to_caip2(k) }
 		end
 
 		def to_caip2(network_name)
-			custom = Instapay.configuration.chain_config(network_name)
+			custom = X402Payments.configuration.chain_config(network_name)
 			return "#{custom[:standard]}:#{custom[:chain_id]}" if custom
 
 			CAIP2_MAPPING[network_name] || raise(ConfigurationError, "No CAIP-2 mapping for: #{network_name}")
@@ -113,7 +113,7 @@ module Instapay
 		def from_caip2(caip2_string)
 			return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
 
-			Instapay.configuration.custom_chains.each do |name, config|
+			X402Payments.configuration.custom_chains.each do |name, config|
 				caip2 = "#{config[:standard]}:#{config[:chain_id]}"
 				return name if caip2 == caip2_string
 			end
@@ -124,7 +124,7 @@ module Instapay
 		# NOTE: Fee payer configuration is under review.
 		def fee_payer_for(chain_name)
 			# Priority: 1) Programmatic config, 2) Per-chain ENV variable, 3) Generic ENV variable, 4) Default from CHAINS
-			config = Instapay.configuration
+			config = X402Payments.configuration
 
 			# Check programmatic configuration
 			return config.fee_payer if config.fee_payer && !config.fee_payer.empty?

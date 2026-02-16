@@ -1,4 +1,4 @@
-module Instapay
+module X402Payments
   module ControllerExtensions
     extend ActiveSupport::Concern
 
@@ -14,7 +14,7 @@ module Instapay
       else
         @verified_payment = verify_payment(payment_header, required_payment)
         
-        unless Instapay.configuration.optimistic
+        unless X402Payments.configuration.optimistic
           settlement_response = settle_payment(@verified_payment)
 
           unless settlement_response && settlement_response["success"]
@@ -28,7 +28,7 @@ module Instapay
 
     #note -- does not block payment if the settlement ultimately fails -- this is a best effort attempt to settle after verification, but does not impact access to the resource.
     def settle_deferred_payment
-      if Instapay.configuration.optimistic && @verified_payment.present?
+      if X402Payments.configuration.optimistic && @verified_payment.present?
         settlement_response = settle_payment(@verified_payment)
       end
     end
@@ -50,8 +50,8 @@ module Instapay
       puts "Generating payment required response with options: #{updated_options.inspect}"
       
       begin
-        Instapay::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
-      rescue Instapay::ClientMessaging::InvalidPaymentOptionsError => e
+        X402Payments::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
+      rescue X402Payments::ClientMessaging::InvalidPaymentOptionsError => e
         # Re-raise as ArgumentError so it's clear to the developer what went wrong
         raise ArgumentError.new("Invalid payment options: #{e.message}")
       end
@@ -69,8 +69,8 @@ module Instapay
       # - no matching accept is found
       # - data is internally inconsistent
       begin
-        settlement_request = Instapay::FacilitatorMessaging::SettlementRequest.new(payment_payload, required_payment[:accepts]).generate
-      rescue Instapay::FacilitatorMessaging::InvalidSettlementRequestError => e
+        settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(payment_payload, required_payment[:accepts]).generate
+      rescue X402Payments::FacilitatorMessaging::InvalidSettlementRequestError => e
         response = required_payment.merge({
           error: e.message
         })
@@ -80,11 +80,11 @@ module Instapay
 
       # Verify payment with facilitator (external verification)
       begin
-        verify_result = Instapay::FacilitatorClient.new.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
-      rescue Instapay::InvalidPaymentError => e
+        verify_result = X402Payments::FacilitatorClient.new.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+      rescue X402Payments::InvalidPaymentError => e
         ::Rails.logger.error "Invalid payment: #{e.message}"
         return render_402_response(required_payment)
-      rescue Instapay::FacilitatorError => e
+      rescue X402Payments::FacilitatorError => e
         ::Rails.logger.error "Facilitator error: #{e.message}"      
         return render_402_response(required_payment)      
       end
@@ -94,7 +94,7 @@ module Instapay
 
     def settle_payment(settlement_request)
       begin
-        settlement_response = Instapay::FacilitatorClient.new.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+        settlement_response = X402Payments::FacilitatorClient.new.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
 
         # step5 - handle settlement response
         if settlement_response["success"]
@@ -106,7 +106,7 @@ module Instapay
         end
 
         settlement_response
-      rescue Instapay::FacilitatorError => e
+      rescue X402Payments::FacilitatorError => e
         ::Rails.logger.error "Facilitator error during settlement: #{e.message}"
         nil
       end
@@ -118,7 +118,7 @@ module Instapay
         JSON.parse(decoded, symbolize_names: true)
       rescue => e
         #TO DO - ADD A PAYMENT ERROR CLASS
-        # raise Instapay::PaymentError, "Invalid payment signature header: #{e.message}"
+        # raise X402Payments::PaymentError, "Invalid payment signature header: #{e.message}"
         raise "Invalid payment signature header: #{e.message}"
       end
     end

@@ -1,4 +1,4 @@
-module Instapay
+module X402Payments
   module ClientMessaging
     class AcceptedPaymentsFormatter
       def format(payment, options)
@@ -27,32 +27,32 @@ module Instapay
       private
 
       def get_token_config(payment)
-        currency = payment[:currency] || Instapay.configuration.currency
+        currency = payment[:currency] || X402Payments.configuration.currency
         chain_name = payment[:chain]
-        custom = Instapay.configuration.token_config(chain_name, currency)
+        custom = X402Payments.configuration.token_config(chain_name, currency)
 
         if custom
           custom
-        elsif currency.upcase == "USDC" && Instapay::Chains::CURRENCY_BY_CHAIN[chain_name]
-          Instapay::Chains::CURRENCY_BY_CHAIN[chain_name]
+        elsif currency.upcase == "USDC" && X402Payments::Chains::CURRENCY_BY_CHAIN[chain_name]
+          X402Payments::Chains::CURRENCY_BY_CHAIN[chain_name]
         else
-          raise Instapay::ConfigurationError, "Unknown token #{currency} for chain #{chain_name}. Register with config.register_token()"
+          raise X402Payments::ConfigurationError, "Unknown token #{currency} for chain #{chain_name}. Register with config.register_token()"
         end
       end
 
       def get_asset_address(payment)
-        currency = payment[:currency] || Instapay.configuration.currency
+        currency = payment[:currency] || X402Payments.configuration.currency
         chain_name = payment[:chain]
 
-        custom = Instapay.configuration.token_config(chain_name, currency)
+        custom = X402Payments.configuration.token_config(chain_name, currency)
         return custom[:address] if custom
 
         if currency.upcase == "USDC"
-          builtin = Instapay::Chains::CHAINS[chain_name]
+          builtin = X402Payments::Chains::CHAINS[chain_name]
           return builtin[:usdc_address] if builtin && builtin[:usdc_address]
         end
 
-        raise Instapay::ConfigurationError, "Unknown token #{currency} for chain #{chain_name}. Register with config.register_token()"
+        raise X402Payments::ConfigurationError, "Unknown token #{currency} for chain #{chain_name}. Register with config.register_token()"
       end
 
       def convert_to_atomic_units(amount, decimals)
@@ -61,8 +61,8 @@ module Instapay
 
       def build_extra_data(options, token_config)
         extra_data = {}
-        if Instapay.solana_chain?(options[:chain])
-          extra_data[:feePayer] = options[:fee_payer] || Instapay.fee_payer_for(options[:chain])
+        if X402Payments.solana_chain?(options[:chain])
+          extra_data[:feePayer] = options[:fee_payer] || X402Payments.fee_payer_for(options[:chain])
         else
           extra_data[:name] = token_config[:name]
           extra_data[:version] = token_config[:version]
@@ -71,13 +71,13 @@ module Instapay
       end
 
       def format_network(chain)
-        caip2 = Instapay::Chains::CAIP2_MAPPING[chain]
-        raise Instapay::ConfigurationError, "Unknown chain #{chain}. Register with config.register_chain()" unless caip2
+        caip2 = X402Payments::Chains::CAIP2_MAPPING[chain]
+        raise X402Payments::ConfigurationError, "Unknown chain #{chain}. Register with config.register_chain()" unless caip2
         caip2
       end
 
       def resolve_wallet_address(payment, options)
-        options[:wallet_address] || payment[:wallet_address] || Instapay.configuration.wallet_address
+        options[:wallet_address] || payment[:wallet_address] || X402Payments.configuration.wallet_address
       end
     end
   end

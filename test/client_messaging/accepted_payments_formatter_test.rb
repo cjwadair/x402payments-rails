@@ -2,7 +2,7 @@ require "test_helper"
 
 class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
   def setup
-    @formatter = Instapay::ClientMessaging::AcceptedPaymentsFormatter.new
+    @formatter = X402Payments::ClientMessaging::AcceptedPaymentsFormatter.new
   end
 
   test "formats payment with built-in chain and currency" do
@@ -16,7 +16,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     assert_equal "eip155:84532", response[:network]
     assert_equal "1500000", response[:amount] # 1.50 * 10^6
     assert_equal "0x036CbD53842c5426634e7929541eC2318f3dCF7e", response[:asset]
-    assert_equal Instapay.configuration.wallet_address, response[:payTo]
+    assert_equal X402Payments.configuration.wallet_address, response[:payTo]
     assert_equal 600, response[:maxTimeoutSeconds]
     assert response[:extra].is_a?(Hash)
     assert_equal "USDC", response[:extra][:name]
@@ -61,7 +61,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
 
   test "raises error for unknown chain in CAIP2 mapping" do
     # Register a custom token so we pass token validation, but use unknown chain for CAIP2
-    Instapay.configuration.register_token(
+    X402Payments.configuration.register_token(
       chain: "unknown-chain",
       symbol: "USDC",
       address: "0xTestAddress",
@@ -73,7 +73,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     payment = { chain: "unknown-chain", currency: "USDC" }
     options = { amount: 1.0 }
     
-    error = assert_raises(Instapay::ConfigurationError) do
+    error = assert_raises(X402Payments::ConfigurationError) do
       @formatter.format(payment, options)
     end
     
@@ -93,7 +93,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
   end
 
   test "uses custom token config when registered" do
-    Instapay.configuration.register_token(
+    X402Payments.configuration.register_token(
       chain: "base",
       symbol: "ETH",
       address: "0xCustomETHAddress",
@@ -117,7 +117,7 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     payment = { chain: "base", currency: "UNKNOWN" }
     options = { amount: 1.0 }
     
-    error = assert_raises(Instapay::ConfigurationError) do
+    error = assert_raises(X402Payments::ConfigurationError) do
       @formatter.format(payment, options)
     end
     

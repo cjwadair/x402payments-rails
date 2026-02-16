@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    instapay (0.1.0)
+    x402payments-rails (0.1.0)
       faraday (~> 2.1)
       rails (>= 7.2, < 9.0)
 
@@ -269,12 +269,12 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal (~> 2.5)
-  instapay!
   puma
   rubocop-rails-omakase
   sqlite3
   vcr (~> 6.0)
   webmock (~> 3.0)
+  x402payments-rails!
 
 BUNDLED WITH
    2.7.2

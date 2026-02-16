@@ -45,7 +45,7 @@ class SettlementRequestTest < ActiveSupport::TestCase
   end
 
   test "generates valid settlement request with correct structure" do
-    settlement_request = Instapay::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
+    settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
 
     puts "settlement_request: #{settlement_request.inspect}"
 
@@ -55,20 +55,20 @@ class SettlementRequestTest < ActiveSupport::TestCase
   end
 
   test "paymentPayload has correct keys" do
-    settlement_request = Instapay::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
+    settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
     assert_equal settlement_request[:paymentPayload].keys, [:x402Version, :accepted, :payload, :extensions, :resource]
   end
 
   test "paymentRequirements matches accepted payment" do
-    settlement_request = Instapay::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
+    settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
     assert_equal @accepted_payments.first, settlement_request[:paymentRequirements]
   end
 
   test "raises error for missing accepted payment info in payload" do
     invalid_payload = @valid_payload.dup
     invalid_payload.delete(:accepted)
-    assert_raises(Instapay::FacilitatorMessaging::InvalidSettlementRequestError) do
-      Instapay::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
+    assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
+      X402Payments::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
     end
   end
 
@@ -83,8 +83,8 @@ class SettlementRequestTest < ActiveSupport::TestCase
       maxTimeoutSeconds: 600,
       extra: {name: "USDC", version: "2"}
     }
-    assert_raises(Instapay::FacilitatorMessaging::InvalidSettlementRequestError) do
-      Instapay::FacilitatorMessaging::SettlementRequest.new(mismatched_payload, @accepted_payments).generate
+    assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
+      X402Payments::FacilitatorMessaging::SettlementRequest.new(mismatched_payload, @accepted_payments).generate
     end
   end
 
@@ -92,24 +92,24 @@ class SettlementRequestTest < ActiveSupport::TestCase
     invalid_payload = @valid_payload.dup
     invalid_payload[:payload].delete(:authorization)
 
-    assert_raises(Instapay::FacilitatorMessaging::InvalidSettlementRequestError) do
-      Instapay::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
+    assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
+      X402Payments::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
     end
   end
 
   test "raises error for recipient mismatch" do
     invalid_payload = @valid_payload.dup
     invalid_payload[:payload][:authorization][:to] = "0xWrongRecipientAddress"
-    assert_raises(Instapay::FacilitatorMessaging::InvalidSettlementRequestError) do
-      Instapay::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
+    assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
+      X402Payments::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
     end
   end
 
   test "raises error for insufficient amount" do
     invalid_payload = @valid_payload.dup
     invalid_payload[:payload][:authorization][:value] = "500" # Less than required 1000
-    assert_raises(Instapay::FacilitatorMessaging::InvalidSettlementRequestError) do
-      Instapay::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
+    assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
+      X402Payments::FacilitatorMessaging::SettlementRequest.new(invalid_payload, @accepted_payments).generate
     end
   end
 
@@ -125,8 +125,8 @@ class SettlementRequestTest < ActiveSupport::TestCase
         extra: {name: "USDC", version: "2"}
       }
     ]
-    assert_raises(Instapay::FacilitatorMessaging::InvalidSettlementRequestError) do
-      Instapay::FacilitatorMessaging::SettlementRequest.new(@valid_payload, invalid_accepted_payments).generate
+    assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
+      X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, invalid_accepted_payments).generate
     end
   end
 

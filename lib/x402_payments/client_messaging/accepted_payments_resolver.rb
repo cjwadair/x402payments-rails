@@ -1,4 +1,4 @@
-module Instapay
+module X402Payments
   module ClientMessaging
     class AcceptedPaymentsResolver
       def resolve(accepts:, chain:, currency:)
@@ -17,7 +17,7 @@ module Instapay
         accepts.map do |acc|
           {
             chain: acc[:chain],
-            currency: acc[:currency] || Instapay.configuration.currency || "USDC",
+            currency: acc[:currency] || X402Payments.configuration.currency || "USDC",
             wallet_address: acc[:wallet_address]
           }
         end
@@ -26,13 +26,13 @@ module Instapay
       def build_from_chain(chain, currency)
         [{
           chain: chain,
-          currency: currency || Instapay.configuration.currency || "USDC",
+          currency: currency || X402Payments.configuration.currency || "USDC",
           wallet_address: nil
         }]
       end
 
       def use_default_payments
-        Instapay.configuration.default_accepted_payments
+        X402Payments.configuration.default_accepted_payments
       end
     end
   end

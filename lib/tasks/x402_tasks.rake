@@ -1,4 +1,4 @@
 # desc "Explaining what the task does"
-# task :instapay do
+# task :x402 do
 #   # Task goes here
 # end

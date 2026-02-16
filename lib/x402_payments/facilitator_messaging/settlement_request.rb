@@ -1,4 +1,4 @@
-module Instapay
+module X402Payments
   module FacilitatorMessaging
     
     class InvalidSettlementRequestError < StandardError; end
@@ -66,7 +66,7 @@ module Instapay
 
         # For EVM chains, validate recipient and amount locally before sending to facilitator
         # For Solana chains, the facilitator handles all validation of the transaction
-        if Instapay.evm_chain?(matching_accept[:network])
+        if X402Payments.evm_chain?(matching_accept[:network])
           #TODO -- Determine what else needs to be validated here before sending to the facilitator for validation -- need to make sure facilitator handles checking signature from and auth validity, etc
           # Validate recipient address
 

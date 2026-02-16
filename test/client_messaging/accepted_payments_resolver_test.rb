@@ -2,7 +2,7 @@ require "test_helper"
 
 class AcceptedPaymentsResolverTest < ActiveSupport::TestCase
   def setup
-    @resolver = Instapay::ClientMessaging::AcceptedPaymentsResolver.new
+    @resolver = X402Payments::ClientMessaging::AcceptedPaymentsResolver.new
   end
 
   test "resolves from accepts array when provided" do
@@ -43,9 +43,9 @@ class AcceptedPaymentsResolverTest < ActiveSupport::TestCase
     result = @resolver.resolve(accepts: nil, chain: nil, currency: nil)
     
     assert_equal 1, result.size
-    assert_equal Instapay.configuration.chain, result[0][:chain]
-    assert_equal Instapay.configuration.currency, result[0][:currency]
-    assert_equal Instapay.configuration.wallet_address, result[0][:wallet_address]
+    assert_equal X402Payments.configuration.chain, result[0][:chain]
+    assert_equal X402Payments.configuration.currency, result[0][:currency]
+    assert_equal X402Payments.configuration.wallet_address, result[0][:wallet_address]
   end
 
   test "fills in missing currency from config in accepts array" do

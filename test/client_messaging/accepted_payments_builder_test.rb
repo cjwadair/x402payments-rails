@@ -2,7 +2,7 @@ require "test_helper"
 
 class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
   def setup
-    @builder = Instapay::ClientMessaging::AcceptedPaymentsBuilder.new
+    @builder = X402Payments::ClientMessaging::AcceptedPaymentsBuilder.new
   end
 
   test "builds accepted payments array from options" do
@@ -39,7 +39,7 @@ class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
       accepts: [{ chain: "base-sepolia", currency: "USDC" }]
     }
     
-    result = Instapay::ClientMessaging::AcceptedPaymentsBuilder.build(options)
+    result = X402Payments::ClientMessaging::AcceptedPaymentsBuilder.build(options)
     
     assert result.is_a?(Array)
     assert_not_empty result

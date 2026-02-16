@@ -1,18 +1,18 @@
 require 'faraday'
 require 'json'
 
-module Instapay
+module X402Payments
   class FacilitatorClient
 
     def initialize(facilitator_url = nil)
-      @facilitator_url = facilitator_url || Instapay.configuration.facilitator_url
+      @facilitator_url = facilitator_url || X402Payments.configuration.facilitator_url
     end
 
     def verify_payment(payment_payload, payment_requirements) 
       validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
 
-      ::Rails.logger.info("=== X402 Verify Request ===")
+      ::Rails.logger.info("=== X402Payments Verify Request ===")
       ::Rails.logger.info("URL: #{@facilitator_url}/verify")
       ::Rails.logger.info("Request body: #{request_body}")
       

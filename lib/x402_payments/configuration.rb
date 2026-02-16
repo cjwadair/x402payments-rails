@@ -1,6 +1,6 @@
-#frozen_string_literal: true
+# frozen_string_literal: true
 
-module Instapay
+module X402Payments
   class Configuration
 
     attr_accessor :wallet_address, :facilitator_url, :chain, :currency, :optimistic, :fee_payer, :custom_tokens

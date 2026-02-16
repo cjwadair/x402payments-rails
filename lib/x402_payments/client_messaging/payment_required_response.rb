@@ -1,4 +1,4 @@
-module Instapay
+module X402Payments
   module ClientMessaging
     class InvalidPaymentOptionsError < StandardError; end
 
@@ -19,7 +19,7 @@ module Instapay
           description: normalized_options[:description]
         )
 
-        puts "x402 response object: #{response.inspect}"
+        puts "X402Payments response object: #{response.inspect}"
         
         response
       end
@@ -50,7 +50,7 @@ module Instapay
         # Reformat to CAIP2 if needed
         if normalized[:chain].present? && normalized[:chain].exclude?(":")
           # Convert CAIP2 format to chain name
-          caip2 = Instapay.to_caip2(normalized[:chain].to_s.downcase)
+          caip2 = X402Payments.to_caip2(normalized[:chain].to_s.downcase)
           normalized[:chain] = caip2 if caip2.present?
         end
 
@@ -97,7 +97,7 @@ module Instapay
         # Checks that supplied chain option is a suppored chain
         if options[:chain].present?
           chain = options[:chain]
-          unless Instapay.supported_chains.include?(chain.to_s.downcase)
+          unless X402Payments.supported_chains.include?(chain.to_s.downcase)
             raise InvalidPaymentOptionsError, "Unsupported chain: #{chain}"
           end
         end

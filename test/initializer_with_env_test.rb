@@ -12,12 +12,12 @@ class InitializerWithEnvTest < ActiveSupport::TestCase
 
   test "configuration can be reset and reconfigured" do
     # Save original config
-    original_wallet = Instapay.configuration.wallet_address
+    original_wallet = X402Payments.configuration.wallet_address
     
     # Reset and reconfigure
-    Instapay.reset_configuration!
+    X402Payments.reset_configuration!
     
-    Instapay.configure do |config|
+    X402Payments.configure do |config|
       config.wallet_address = "0xNewTestWallet"
       config.facilitator_url = "https://test.facilitator.com"
       config.chain = "polygon-amoy"
@@ -28,7 +28,7 @@ class InitializerWithEnvTest < ActiveSupport::TestCase
     end
     
     # Verify the new configuration
-    config = Instapay.configuration
+    config = X402Payments.configuration
     assert_equal "0xNewTestWallet", config.wallet_address
     assert_equal "https://test.facilitator.com", config.facilitator_url
     assert_equal "polygon-amoy", config.chain
@@ -37,7 +37,7 @@ class InitializerWithEnvTest < ActiveSupport::TestCase
     
     # Restore original config for other tests
     # (In practice, you'd use setup/teardown or fixtures for this)
-    Instapay.reset_configuration!
-    load File.expand_path("dummy/config/initializers/instapay.rb", __dir__)
+    X402Payments.reset_configuration!
+      load File.expand_path("dummy/config/initializers/x402_payments.rb", __dir__)
   end
 end

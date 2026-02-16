@@ -1,13 +1,13 @@
-require_relative "lib/instapay/version"
+require_relative "lib/x402_payments/version"
 
 Gem::Specification.new do |spec|
-  spec.name        = "instapay"
-  spec.version     = Instapay::VERSION
+  spec.name        = "x402payments-rails"
+  spec.version     = X402Payments::VERSION
   spec.authors     = [ "cjwadair" ]
   spec.email       = [ "cjwadair@gmail.com" ]
   # spec.homepage    = "TODO"
   spec.summary     = "x402 micropayments for Rails."
-  spec.description = "Instapay is a Rails engine that simplifies the integration of x402 micropayments into your Rails applications, enabling seamless and efficient payment processing."
+  spec.description = "X402 is a Rails engine that simplifies the integration of x402 micropayments into your Rails applications, enabling seamless and efficient payment processing."
   spec.license     = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the "allowed_push_host"
