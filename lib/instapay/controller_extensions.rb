@@ -2,42 +2,39 @@ module Instapay
   module ControllerExtensions
     extend ActiveSupport::Concern
 
-    # included do
-    #   after_action :settle_payment_if_needed
-    # end
-
-    # Optional: in a controller, call `before_action :enforce_paywall`
-    # to run this hook ahead of every request.
-    # def enforce_paywall(options = {})
-    #   require_payment(options)
-    # end
+    included do
+      after_action :settle_deferred_payment
+    end
 
     def require_x402_payment(options = {})
       payment_header = request.headers['PAYMENT-SIGNATURE']
-      response_object = generate_required_payment(options)
+      required_payment = generate_required_payment(options)
       if payment_header.blank?
-        render_402_response(response_object)      
+        render_402_response(required_payment)      
       else
-        settle_payment(payment_header, response_object)
+        @verified_payment = verify_payment(payment_header, required_payment)
+        
+        unless Instapay.configuration.optimistic
+          settlement_response = settle_payment(@verified_payment)
+
+          unless settlement_response && settlement_response["success"]
+            render_402_response(required_payment)
+          end
+        end
       end
     end
 
-    # class_methods do
-    #   def skip_paywall_enforcement(**options)
-    #     skip_before_action :enforce_paywall, **options
-    #   end
-    # end
-
     private
 
-    # def settle_payment_if_needed
-    #   unless Instapay.configuration.optimistic
-    #     settle_payment
-    #   end
-    # end
+    #note -- does not block payment if the settlement ultimately fails -- this is a best effort attempt to settle after verification, but does not impact access to the resource.
+    def settle_deferred_payment
+      if Instapay.configuration.optimistic && @verified_payment.present?
+        settlement_response = settle_payment(@verified_payment)
+      end
+    end
 
-    def render_402_response(response_object)
-      response.headers['PAYMENT-REQUIRED'] = Base64.strict_encode64(response_object.to_json)
+    def render_402_response(required_payment)
+      response.headers['PAYMENT-REQUIRED'] = Base64.strict_encode64(required_payment.to_json)
       render json: {error: "Payment required"}, status: :payment_required
     end
 
@@ -60,7 +57,7 @@ module Instapay
       end
     end
 
-    def settle_payment(payment_header, required_payment)
+    def verify_payment(payment_header, required_payment)
       # payment header is base64 encode signed authorization payload
       # options is a hash including an amount and other optional values
 
@@ -75,39 +72,44 @@ module Instapay
         settlement_request = Instapay::FacilitatorMessaging::SettlementRequest.new(payment_payload, required_payment[:accepts]).generate
       rescue Instapay::FacilitatorMessaging::InvalidSettlementRequestError => e
         response = required_payment.merge({
-          error: "Payment Type Not Accepted"
+          error: e.message
         })
-        puts "Payment validation failed: #{e.message}" 
+        ::Rails.logger.error "Payment validation failed: #{e.message}"
         return render_402_response(response)
       end
 
-      # Verify and settle payment with the facilitator
-      facilitator_client = Instapay::FacilitatorClient.new
-
       # Verify payment with facilitator (external verification)
       begin
-        verify_result = facilitator_client.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+        verify_result = Instapay::FacilitatorClient.new.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
       rescue Instapay::InvalidPaymentError => e
-        puts "Invalid payment: #{e.message}"
+        ::Rails.logger.error "Invalid payment: #{e.message}"
         return render_402_response(required_payment)
       rescue Instapay::FacilitatorError => e
-        puts "Facilitator error: #{e.message}"
-        return render_402_response(required_payment)
+        ::Rails.logger.error "Facilitator error: #{e.message}"      
+        return render_402_response(required_payment)      
       end
 
-      # Settle payment with facilitator
-      settlement_response = facilitator_client.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+      settlement_request
+    end
 
-      # step5 - handle settlement response
-      if settlement_response["success"]
-        #payment settled successfully -- allow access to resource
-        puts "Payment settled successfully: #{settlement_response.inspect}"
-        # render json: settlement_response[:body], status: :ok
-      else
-        #payment settlement failed -- respond with payment required
-        return render_402_response(required_payment)
+    def settle_payment(settlement_request)
+      begin
+        settlement_response = Instapay::FacilitatorClient.new.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+
+        # step5 - handle settlement response
+        if settlement_response["success"]
+          #payment settled successfully -- allow access to resource
+          ::Rails.logger.info "Payment settled successfully: #{settlement_response.inspect}"
+          
+          #add the PAYMENT-RESPONSE header with settlement details for client reference
+          response.headers['PAYMENT-RESPONSE'] = Base64.strict_encode64(settlement_response.to_json)
+        end
+
+        settlement_response
+      rescue Instapay::FacilitatorError => e
+        ::Rails.logger.error "Facilitator error during settlement: #{e.message}"
+        nil
       end
-
     end
 
     def decode_header(payment_header)

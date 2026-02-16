@@ -1,8 +1,6 @@
 module Api
   class PremiumContentController < ApplicationController
     # before_action :authenticate_user!
-    # before_action :ensure_premium_access
-    # before_action -> { enforce_paywall(paywall_options) }, except: [:free_info]
     before_action :require_payment, except: [:free_info]
 
     def paywalled_info

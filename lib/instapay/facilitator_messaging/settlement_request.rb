@@ -123,9 +123,7 @@ module Instapay
           resource: payload[:resource]
         }
       end
-
-      def format_network(network)
-      end
+      
     end
   end
 end
