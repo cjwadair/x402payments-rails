@@ -1,3 +1,7 @@
+# Start coverage before app code is loaded
+require "simplecov"
+SimpleCov.start "rails"
+
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"
 
