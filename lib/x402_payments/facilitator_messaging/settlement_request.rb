@@ -58,7 +58,13 @@ module X402Payments
 
       def validate_inputs!
 
-        authorization = payload[:payload][:authorization]
+        extracted_payload = payload[:payload]
+
+        unless extracted_payload
+          raise InvalidSettlementRequestError, "Missing payload in payment header"
+        end
+
+        authorization = extracted_payload[:authorization]
         
         unless authorization
           raise InvalidSettlementRequestError, "Missing authorization in payload"
@@ -75,13 +81,14 @@ module X402Payments
           requirements_scheme = matching_accept[:scheme] || "exact"
           
           unless payload_scheme == requirements_scheme
-            raise InvalidSettlementRequestError, "Scheme mismatch: expected #{requirements_scheme}, got #{payload_scheme}"
+            raise InvalidSettlementRequestError, "Scheme mismatch: expected #{requirements_scheme}, got #{payload_scheme ||"nil"}"
           end
 
           # Validate network
-          unless payload[:accepted][:network] == matching_accept[:network]
-            raise InvalidSettlementRequestError, "Network mismatch: expected #{matching_accept[:network]}, got #{payload[:accepted][:network]}"
-          end
+          # TODO :: Verify never called then remove
+          # unless payload[:accepted][:network] == matching_accept[:network]
+          #   raise InvalidSettlementRequestError, "Network mismatch: expected #{matching_accept[:network]}, got #{payload[:accepted][:network]}"
+          # end
           
           unless authorization[:to]&.downcase == matching_accept[:payTo]&.downcase
             raise InvalidSettlementRequestError, "Recipient mismatch: expected #{matching_accept[:payTo]}, got #{authorization[:to]}"

@@ -92,7 +92,10 @@ module X402Payments
 		SOLANA_CHAINS = %w[solana solana-devnet].freeze
 
 		def solana_chain?(chain_name)
-			SOLANA_CHAINS.include?(chain_name)
+			return false if chain_name.nil?
+
+			chain = chain_name.to_s
+			SOLANA_CHAINS.include?(chain) || chain.start_with?("solana:")
 		end
 
 		def evm_chain?(chain_name)
@@ -110,16 +113,17 @@ module X402Payments
 			CAIP2_MAPPING[network_name] || raise(ConfigurationError, "No CAIP-2 mapping for: #{network_name}")
 		end
 
-		def from_caip2(caip2_string)
-			return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
+		#NOT CURENTLY IN USE
+		# def from_caip2(caip2_string)
+		# 	return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
 
-			X402Payments.configuration.custom_chains.each do |name, config|
-				caip2 = "#{config[:standard]}:#{config[:chain_id]}"
-				return name if caip2 == caip2_string
-			end
+		# 	X402Payments.configuration.custom_chains.each do |name, config|
+		# 		caip2 = "#{config[:standard]}:#{config[:chain_id]}"
+		# 		return name if caip2 == caip2_string
+		# 	end
 
-			raise(ConfigurationError, "Unknown CAIP-2 network: #{caip2_string}")
-		end
+		# 	raise(ConfigurationError, "Unknown CAIP-2 network: #{caip2_string}")
+		# end
 
 		# NOTE: Fee payer configuration is under review.
 		def fee_payer_for(chain_name)

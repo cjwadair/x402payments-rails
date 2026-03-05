@@ -8,6 +8,18 @@
 /test/dummy/log/*.log
 /test/dummy/storage/
 /test/dummy/tmp/
+/coverage/
+
+# macOS / editor
+.DS_Store
+*.swp
+*.swo
+*~
+
+# local Ruby tooling
+.yardoc/
+.byebug_history
+.ruby-lsp/
 
 # Appraisal generated directories (keep .lock files)
 /gemfiles/*.bundle

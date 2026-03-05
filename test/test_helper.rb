@@ -1,6 +1,8 @@
-# Start coverage before app code is loaded
+# Start coverage before app code is loaded by tests
 require "simplecov"
-SimpleCov.start "rails"
+SimpleCov.start "rails" do
+  track_files "lib/**/*.rb"
+end
 
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"

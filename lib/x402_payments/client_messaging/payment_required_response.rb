@@ -48,31 +48,50 @@ module X402Payments
         end
         
         # Reformat to CAIP2 if needed
-        if normalized[:chain].present? && normalized[:chain].exclude?(":")
-          # Convert CAIP2 format to chain name
-          caip2 = X402Payments.to_caip2(normalized[:chain].to_s.downcase)
-          normalized[:chain] = caip2 if caip2.present?
-        end
-
+        normalized[:chain] = normalize_chain(normalized[:chain])
+        
         # Normalize currency to uppercase
-        if normalized[:currency].present?
-          normalized[:currency] = normalized[:currency].to_s.upcase
-        end
+        normalized[:currency] = normalize_currency(normalized[:currency])
         
         # Normalize wallet address (trim whitespace)
-        if normalized[:wallet_address].is_a?(String)
-          normalized[:wallet_address] = normalized[:wallet_address].strip
-        end
+        normalized[:wallet_address] = normalize_wallet_address(normalized[:wallet_address])
+        
 
         #TODO -- Add normalization to ensure the accepts array is correctly formatted
         if normalized[:accepts].is_a?(Array)
           normalized[:accepts] = normalized[:accepts].map do |accept|
             # Normalize each accept entry if needed
+            accept[:chain] = normalize_chain(accept[:chain])
+            accept[:currency] = normalize_currency(accept[:currency])
+            accept[:wallet_address] = normalize_wallet_address(accept[:wallet_address])
             accept
           end
         end
         
         normalized
+      end
+
+      def normalize_chain(chain)
+        if chain.present? && chain.exclude?(":")
+          # Convert CAIP2 format to chain name
+          caip2 = X402Payments.to_caip2(chain.to_s.downcase)
+          chain = caip2 if caip2.present?
+        end
+        chain
+      end
+
+      def normalize_currency(currency)
+        if currency.present?
+          currency = currency.to_s.upcase
+        end
+        currency
+      end
+
+      def normalize_wallet_address(wallet_address)
+        if wallet_address.present? && wallet_address.is_a?(String)
+          wallet_address = wallet_address.strip
+        end
+        wallet_address
       end
 
       def validate_options!(options)

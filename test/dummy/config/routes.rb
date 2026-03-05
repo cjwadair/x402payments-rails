@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       collection do
         get :paywalled_info
         get :free_info
+        get :invalid_payment_info
       end
     end
   end

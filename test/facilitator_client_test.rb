@@ -88,6 +88,16 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     assert response["extensions"].is_a?(Array)
   end
 
+  test "raises FacilitatorError if FaradayError returned when fetching supported networks" do
+    stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
+      .to_timeout
+    
+    error = assert_raises X402Payments::FacilitatorError do
+      @client.supported_networks
+    end
+    assert_match(/Failed to fetch supported networks:/, error.message)
+  end
+    
   test "handles 500 series errors correctly" do
     stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 500)
@@ -142,6 +152,17 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       assert_equal response.keys.sort, ["success", "transaction", "network", "payer"].sort
     end
   end
+
+  test "raises validator error if FaradayError returned when verifying payment" do
+    stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
+      .to_timeout
+    
+    error = assert_raises X402Payments::FacilitatorError do
+      @client.verify_payment(@payload, @payment_requirements)
+    end
+    
+    assert_match(/Failed to verify payment:/, error.message)
+  end
   
   test "builds payment request and receives valid response when submitting payment" do
     VCR.turned_off do
@@ -152,6 +173,15 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       assert response.is_a?(Hash)
       assert_equal response["success"], true
     end
+  end
+
+  test "raises FacilitatorError if FaradayError returned when submitting payment" do
+    stub_request(:post, "#{X402Payments.configuration.facilitator_url}/settle")
+      .to_timeout
+    error = assert_raises X402Payments::FacilitatorError do
+      @client.settle_payment(@payload, @payment_requirements)
+    end
+    assert_match(/Failed to settle payment:/, error.message)
   end
 
   test "sends payment processing request and receives valid response" do
@@ -262,6 +292,16 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     end
 
     assert_match(/Payment payload missing 'payload'/, error.message)
+  end
+
+  test "raises error when payment payload[:payload] is not a hash" do
+    invalid_payload = { payload: "invalid", accepted: @payload[:accepted] }
+
+    error = assert_raises X402Payments::InvalidPaymentError do
+      @client.verify_payment(invalid_payload, @payment_requirements)
+    end
+
+    assert_match(/Payment payload 'payload' must be a Hash/, error.message)
   end
 
   test "raises error when payment payload accepted is not a hash" do

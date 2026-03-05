@@ -121,6 +121,6 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
       @formatter.format(payment, options)
     end
     
-    assert_includes error.message, "Unknown token UNKNOWN for chain base"
+    assert_includes error.message, "Unknown token UNKNOWN for chain base. Register with config.register_token()"
   end
 end

@@ -75,6 +75,24 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     assert_equal "USDC", normalized[:currency]
   end
 
+  test "normalizes wallet_address to remove whitespace" do
+    options = @options.merge(wallet_address: " 0xAbC123   ")
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    normalized = instance.send(:normalize_options!, options)
+    assert_equal "0xAbC123", normalized[:wallet_address]
+  end
+
+  test "normalizes accepts array entries" do
+    options = @options.merge(accepts: [
+      {chain: "base-sepolia", currency: "usdc", wallet_address: " 0xAbC123   "}
+    ])
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    normalized = instance.send(:normalize_options!, options)
+    assert_equal "eip155:84532", normalized[:accepts][0][:chain]
+    assert_equal "USDC", normalized[:accepts][0][:currency]
+    assert_equal "0xAbC123", normalized[:accepts][0][:wallet_address]
+  end
+
   test "validates amount is numeric and positive" do
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
 
@@ -95,6 +113,14 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     unsupported_options = @options.merge(chain: "unsupported_chain")
     assert_raises(X402Payments::ClientMessaging::InvalidPaymentOptionsError) do
       instance.send(:validate_options!, unsupported_options)
+    end
+  end
+
+  test "validates accepts array format" do
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    invalid_accepts = @options.merge(accepts: "not_an_array")
+    assert_raises(X402Payments::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_accepts)
     end
   end
 

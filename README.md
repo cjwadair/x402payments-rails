@@ -1,5 +1,7 @@
 # x402payments-rails
-add support for x402 micropayments to any controller endpoint
+Add support for x402 micropayments to any controller endpoint.
+
+This gem is currently in active development and breaking changes are possible.
 
 ## Installation
 Add this line to your application's Gemfile:
@@ -10,7 +12,7 @@ gem "x402payments-rails"
 
 And then execute:
 ```bash
-$ bundle. install
+$ bundle install
 ```
 
 Or install it yourself as:
