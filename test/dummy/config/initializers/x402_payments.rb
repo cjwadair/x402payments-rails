@@ -1,6 +1,5 @@
 X402Payments.configure do |config|
 
-  puts "Configuring X402Payments with environment variables..."
   # Your wallet address (where payments will be received)
   # For testing, you can use a test wallet address
   config.wallet_address = ENV.fetch("X402_WALLET_ADDRESS", '0x0613da3bd559d9ecc5a662fb517ff979cde3e78d')

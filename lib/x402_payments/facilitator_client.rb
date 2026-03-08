@@ -98,7 +98,6 @@ module X402Payments
         x402Version: 2,
         authorization: payload[:authorization],
         signature: payload[:signature],
-        payload: payload,
         paymentPayload: payload,
         paymentRequirements: requirements
       }.to_json

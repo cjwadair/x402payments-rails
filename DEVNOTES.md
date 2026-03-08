@@ -10,10 +10,10 @@
 
 ## CLI commands for running tests
 
-- test — runs the test suite against the latest Rails version during development.
-- test-all — runs the test suite across all supported Rails versions (7.2, 8.0, 8.1).
+- bin/test — runs the test suite against the latest Rails version during development.
+- bin/test-all — runs the test suite across all supported Rails versions (7.2, 8.0, 8.1).
 
-## Commands for running appraisals
+## Commands for running appraisalsd
 
 - bundle exec appraisal install — generates/updates the appraisal Gemfiles under gemfiles/.
 - bundle exec appraisal rails-7.2 rake test — run tests under the Rails 7.2 appraisal.
