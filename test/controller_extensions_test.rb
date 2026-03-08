@@ -1,12 +1,11 @@
 require "test_helper"
 
 class ControllerExtensionsTest < ActiveSupport::TestCase
-
     test "allows access when PAYMENT-SIGNATURE header is present" do
       skip "temporarily disabled"
       controller = ActionController::Base.new
       request = ActionDispatch::Request.new({})
-      request.headers['PAYMENT-SIGNATURE'] = 'valid_signature'
+      request.headers["PAYMENT-SIGNATURE"] = "valid_signature"
       controller.request = request
 
       # Simulate calling the action
@@ -18,12 +17,11 @@ class ControllerExtensionsTest < ActiveSupport::TestCase
       skip "temporarily disabled"
       controller = ActionController::Base.new
       request = ActionDispatch::Request.new({})
-      request.headers['PAYMENT-SIGNATURE'] = nil
+      request.headers["PAYMENT-SIGNATURE"] = nil
       controller.request = request
 
       assert_raises(ArgumentError) do
         controller.require_payment(amount: 1000)
       end
     end
-    
 end

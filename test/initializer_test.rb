@@ -22,19 +22,19 @@ class InitializerTest < ActiveSupport::TestCase
     # This test verifies that the initializer properly uses ENV vars
     # The actual env vars would need to be set before Rails loads
     # This test just validates the current state matches expected defaults
-    
+
     config = X402Payments.configuration
-    
+
     # Since no custom ENV vars are set in test, these should be the defaults
-    assert_equal ENV.fetch("X402_WALLET_ADDRESS", '0x0613da3bd559d9ecc5a662fb517ff979cde3e78d'), 
+    assert_equal ENV.fetch("X402_WALLET_ADDRESS", "0x0613da3bd559d9ecc5a662fb517ff979cde3e78d"),
                  config.wallet_address
-    assert_equal ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator"), 
+    assert_equal ENV.fetch("X402_FACILITATOR_URL", "https://www.x402.org/facilitator"),
                  config.facilitator_url
-    assert_equal ENV.fetch("X402_CHAIN", "base-sepolia"), 
+    assert_equal ENV.fetch("X402_CHAIN", "base-sepolia"),
                  config.chain
-    assert_equal ENV.fetch("X402_CURRENCY", "USDC"), 
+    assert_equal ENV.fetch("X402_CURRENCY", "USDC"),
                  config.currency
-    assert_equal (ENV.fetch("X402_OPTIMISTIC", "false") == "true"), 
+    assert_equal (ENV.fetch("X402_OPTIMISTIC", "false") == "true"),
                  config.optimistic
   end
 end

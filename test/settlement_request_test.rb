@@ -1,7 +1,6 @@
 require "test_helper"
 
 class SettlementRequestTest < ActiveSupport::TestCase
-
   def setup
     @valid_payload = {
       x402Version: 2,
@@ -13,7 +12,7 @@ class SettlementRequestTest < ActiveSupport::TestCase
           validAfter: "1769958357",
           validBefore: "1769959257",
           nonce: "0x34567890123456..."
-        },      
+        },
         signature: "0x1234567890abcdef..."
       },
       resource: {
@@ -22,24 +21,24 @@ class SettlementRequestTest < ActiveSupport::TestCase
         mimeType: "application/json"
       },
       accepted: {
-        scheme: "exact", 
-        network: "eip155:84532", 
-        amount: "1000", 
+        scheme: "exact",
+        network: "eip155:84532",
+        amount: "1000",
         asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
         maxTimeoutSeconds: 600,
-        extra: {name: "USDC", version: "2"}
+        extra: { name: "USDC", version: "2" }
       }
     }
     @accepted_payments = [
       {
-        scheme: "exact", 
-        network: "eip155:84532", 
-        amount: "1000", 
+        scheme: "exact",
+        network: "eip155:84532",
+        amount: "1000",
         asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
         maxTimeoutSeconds: 600,
-        extra: {name: "USDC", version: "2"}
+        extra: { name: "USDC", version: "2" }
       }
     ]
   end
@@ -64,7 +63,7 @@ class SettlementRequestTest < ActiveSupport::TestCase
 
   test "paymentPayload has correct keys" do
     settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
-    assert_equal settlement_request[:paymentPayload].keys, [:x402Version, :accepted, :payload, :extensions, :resource]
+    assert_equal settlement_request[:paymentPayload].keys, [ :x402Version, :accepted, :payload, :extensions, :resource ]
   end
 
   test "paymentRequirements matches accepted payment" do
@@ -83,13 +82,13 @@ class SettlementRequestTest < ActiveSupport::TestCase
   test "raises error when payload accepted does not match accepted payments" do
     mismatched_payload = @valid_payload.dup
     mismatched_payload[:accepted] = {
-      scheme: "exact", 
+      scheme: "exact",
       network: "eip155:43114", # Different network - doesn't match accepted_payments
-      amount: "1000", 
+      amount: "1000",
       asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
       maxTimeoutSeconds: 600,
-      extra: {name: "USDC", version: "2"}
+      extra: { name: "USDC", version: "2" }
     }
     assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
       X402Payments::FacilitatorMessaging::SettlementRequest.new(mismatched_payload, @accepted_payments).generate
@@ -156,13 +155,13 @@ class SettlementRequestTest < ActiveSupport::TestCase
   test "raises error when no matching accepted payment is found" do
     invalid_accepted_payments = [
       {
-        scheme: "exact", 
+        scheme: "exact",
         network: "eip155:43114", # Different network
-        amount: "1000", 
+        amount: "1000",
         asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
         max_timeout_seconds: 600,
-        extra: {name: "USDC", version: "2"}
+        extra: { name: "USDC", version: "2" }
       }
     ]
     error = assert_raises(X402Payments::FacilitatorMessaging::InvalidSettlementRequestError) do
@@ -181,27 +180,27 @@ class SettlementRequestTest < ActiveSupport::TestCase
       asset: "So11111111111111111111111111111111111111112",
       payTo: "RecipientPublicKeyInBase58",
       maxTimeoutSeconds: 600,
-      extra: {name: "USDC", version: "2"}
+      extra: { name: "USDC", version: "2" }
     }
     solana_payload[:transaction] = "AgAAAA...mock_solana_transaction..."
     @accepted_payments[0] = {
-      scheme: "exact", 
-      network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", 
-      amount: "1000", 
+      scheme: "exact",
+      network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+      amount: "1000",
       asset: "So11111111111111111111111111111111111111112",
       payTo: "RecipientPublicKeyInBase58",
       maxTimeoutSeconds: 600,
-      extra: {name: "USDC", version: "2"}
+      extra: { name: "USDC", version: "2" }
     }
     solana_accepted_payments = [
-      { 
-        scheme: "exact", 
-        network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", 
-        amount: "1000", 
+      {
+        scheme: "exact",
+        network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+        amount: "1000",
         asset: "So11111111111111111111111111111111111111112",
         payTo: "RecipientPublicKeyInBase58",
         maxTimeoutSeconds: 600,
-        extra: {name: "USDC", version: "2"}
+        extra: { name: "USDC", version: "2" }
       }
     ]
 
@@ -212,7 +211,7 @@ class SettlementRequestTest < ActiveSupport::TestCase
     assert settlement_request[:paymentRequirements].is_a?(Hash)
   end
 
-  test 'when chain is solana and payload[:transaction] is missing, raises error' do
+  test "when chain is solana and payload[:transaction] is missing, raises error" do
     solana_payload = @valid_payload.dup
     solana_payload[:accepted] = {
       scheme: "exact",
@@ -221,16 +220,16 @@ class SettlementRequestTest < ActiveSupport::TestCase
       asset: "So11111111111111111111111111111111111111112",
       payTo: "RecipientPublicKeyInBase58",
       maxTimeoutSeconds: 600,
-      extra: {name: "USDC", version: "2"}
+      extra: { name: "USDC", version: "2" }
     }
-    @accepted_payments[0] = { 
-      scheme: "exact", 
-      network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", 
-      amount: "1000", 
+    @accepted_payments[0] = {
+      scheme: "exact",
+      network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+      amount: "1000",
       asset: "So11111111111111111111111111111111111111112",
       payTo: "RecipientPublicKeyInBase58",
       maxTimeoutSeconds: 600,
-      extra: {name: "USDC", version: "2"}
+      extra: { name: "USDC", version: "2" }
     }
 
 
@@ -238,7 +237,5 @@ class SettlementRequestTest < ActiveSupport::TestCase
       X402Payments::FacilitatorMessaging::SettlementRequest.new(solana_payload, @accepted_payments).generate
     end
     assert_equal "Solana payment missing transaction payload", error.message
-
   end
-
 end

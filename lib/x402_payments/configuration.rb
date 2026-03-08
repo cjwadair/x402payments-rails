@@ -2,7 +2,6 @@
 
 module X402Payments
   class Configuration
-
     attr_accessor :wallet_address, :facilitator_url, :chain, :currency, :optimistic, :fee_payer, :custom_tokens
     attr_reader :custom_chains, :accepted_payments
 
@@ -12,14 +11,14 @@ module X402Payments
       @chain = ENV.fetch("X402_CHAIN", "base-sepolia")
       @currency = ENV.fetch("X402_CURRENCY", "USDC")
       @optimistic = ENV.fetch("X402_OPTIMISTIC", "false") == "true"
-      #TBD -- do we need this? 
+      # TBD -- do we need this?
       @fee_payer = ENV.fetch("X402_FEE_PAYER", nil)
       @custom_chains = {}
       @custom_tokens = {}
       @accepted_payments = []
     end
 
-    #TODO -- review other validations to cover
+    # TODO -- review other validations to cover
     def validate!
       raise ConfigurationError.new("wallet_address is required") if @wallet_address.nil? || @wallet_address.strip.empty?
       raise ConfigurationError.new("facilitator URL is required") if @facilitator_url.nil? || @facilitator_url.strip.empty?
@@ -28,11 +27,11 @@ module X402Payments
 
     def default_accepted_payments
       if @accepted_payments.empty?
-        [{
+        [ {
           chain: @chain,
           currency: @currency,
           wallet_address: @wallet_address
-        }]
+        } ]
       else
         @accepted_payments
       end
@@ -47,11 +46,10 @@ module X402Payments
     end
 
     def register_chain(name:, chain_id:, standard:)
-      
       unless standard == "eip155"
         raise ConfigurationError, "Only eip155 (EVM) chains are supported for custom registration"
       end
-      
+
       @custom_chains[name] = {
         name: name,
         chain_id: chain_id,
@@ -79,7 +77,6 @@ module X402Payments
     def chain_config(name)
       @custom_chains[name]
     end
-
   end
 
   class ConfigurationError < StandardError; end

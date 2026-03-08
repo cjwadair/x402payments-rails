@@ -13,20 +13,20 @@ require "x402_payments/client_messaging/payment_required_response"
 require "x402_payments/facilitator_messaging/settlement_request"
 
 module X402Payments
-	extend Chains
+  extend Chains
 
-	class << self
-		def configuration
-			@configuration ||= Configuration.new
-		end
+  class << self
+    def configuration
+      @configuration ||= Configuration.new
+    end
 
-		def configure(&block)
-			block.call(configuration)
-			configuration.validate!
-		end
+    def configure(&block)
+      block.call(configuration)
+      configuration.validate!
+    end
 
-		def reset_configuration!
-			@configuration = Configuration.new
-		end
-	end
+    def reset_configuration!
+      @configuration = Configuration.new
+    end
+  end
 end

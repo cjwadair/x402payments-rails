@@ -8,14 +8,14 @@ class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
   test "builds accepted payments array from options" do
     options = {
       amount: 1.50,
-      accepts: [{ chain: "base-sepolia", currency: "USDC" }]
+      accepts: [ { chain: "base-sepolia", currency: "USDC" } ]
     }
-    
+
     result = @builder.build(options)
-    
+
     assert result.is_a?(Array)
     assert_not_empty result
-    
+
     result.each do |payment|
       assert_equal "exact", payment[:scheme]
       assert payment[:network]
@@ -26,21 +26,21 @@ class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
 
   test "builds payments with default configuration when no accepts specified" do
     options = { amount: 1.00 }
-    
+
     result = @builder.build(options)
-    
+
     assert result.is_a?(Array)
     assert_not_empty result
   end
 
   test "class method delegates to instance method" do
-    options = { 
-      amount: 2.50, 
-      accepts: [{ chain: "base-sepolia", currency: "USDC" }]
+    options = {
+      amount: 2.50,
+      accepts: [ { chain: "base-sepolia", currency: "USDC" } ]
     }
-    
+
     result = X402Payments::ClientMessaging::AcceptedPaymentsBuilder.build(options)
-    
+
     assert result.is_a?(Array)
     assert_not_empty result
   end
@@ -48,11 +48,11 @@ class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
   test "passes currency option to resolver" do
     options = {
       amount: 1.00,
-      accepts: [{ chain: "base", currency: "USDC" }]
+      accepts: [ { chain: "base", currency: "USDC" } ]
     }
-    
+
     result = @builder.build(options)
-    
+
     assert result.is_a?(Array)
     result.each do |payment|
       assert_equal "USD Coin", payment[:extra][:name]
@@ -67,9 +67,9 @@ class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
         { chain: "avalanche", currency: "USDC" }
       ]
     }
-    
+
     result = @builder.build(options)
-    
+
     # Should have multiple payment options
     assert result.is_a?(Array)
     assert_equal 2, result.size

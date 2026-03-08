@@ -1,21 +1,20 @@
-require 'faraday'
-require 'json'
+require "faraday"
+require "json"
 
 module X402Payments
   class FacilitatorClient
-
     def initialize(facilitator_url = nil)
       @facilitator_url = facilitator_url || X402Payments.configuration.facilitator_url
     end
 
-    def verify_payment(payment_payload, payment_requirements) 
+    def verify_payment(payment_payload, payment_requirements)
       validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
 
       ::Rails.logger.info("=== X402Payments Verify Request ===")
       ::Rails.logger.info("URL: #{@facilitator_url}/verify")
       ::Rails.logger.info("Request body: #{request_body}")
-      
+
       response = connection.post("verify") do |req|
         req.headers["Content-Type"] = "application/json"
         req.body = request_body
@@ -32,7 +31,7 @@ module X402Payments
     def settle_payment(payment_payload, payment_requirements)
       validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
-      
+
       response = connection.post("settle") do |req|
         req.headers["Content-Type"] = "application/json"
         req.body = request_body
@@ -44,7 +43,7 @@ module X402Payments
     end
 
     def supported_networks
-      response = connection.get('supported')
+      response = connection.get("supported")
       handle_response(response, "supported")
     rescue Faraday::Error => e
       raise FacilitatorError, "Failed to fetch supported networks: #{e.message}"
@@ -52,11 +51,11 @@ module X402Payments
 
     private
 
-    def connection 
+    def connection
       Faraday.new(url: @facilitator_url) do |faraday|
         # faraday.request  :url_encoded
         # faraday.response :logger
-        faraday.adapter  Faraday.default_adapter
+        faraday.adapter Faraday.default_adapter
       end
     end
 
@@ -64,21 +63,21 @@ module X402Payments
       case response.status
       when 200..299
         body = JSON.parse(response.body)
-        
+
         # For verify action, validate the response payload
         if action == "verify"
           # Check if response indicates success (could be 'success' or 'isValid' depending on API version)
           is_valid = body["isValid"] || body["success"]
-          
+
           unless is_valid
             raise InvalidPaymentError, "Facilitator validation failed: #{body['invalidReason'] || body['error']}"
           end
-          
+
           if body["payer"].nil?
             raise InvalidPaymentError, "Verification failed: no payer address returned"
           end
         end
-        
+
         body
       when 400
         error_body = JSON.parse(response.body) rescue {}
@@ -93,7 +92,6 @@ module X402Payments
     end
 
     def request_body(payload, requirements)
-      
       {
         x402Version: 2,
         authorization: payload[:authorization],
@@ -126,7 +124,7 @@ module X402Payments
       raise InvalidPaymentError, "Payment requirements cannot be nil" if payment_requirements.nil?
       raise InvalidPaymentError, "Payment requirements must be a Hash" unless payment_requirements.is_a?(Hash)
 
-      required_fields = [:scheme, :network, :amount, :asset, :payTo]
+      required_fields = [ :scheme, :network, :amount, :asset, :payTo ]
       required_fields.each do |field|
         value = payment_requirements[field] || payment_requirements[field.to_s]
         if value.nil? || value.to_s.empty?
@@ -139,5 +137,4 @@ module X402Payments
 
   class FacilitatorError < StandardError; end
   class InvalidPaymentError < StandardError; end
- 
 end

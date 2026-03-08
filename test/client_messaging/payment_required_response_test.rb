@@ -5,7 +5,7 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     @options = {
       amount: 0.01,
       resource: "https://example.com/protected_resource",
-      description: "Access to protected resource",
+      description: "Access to protected resource"
     }
   end
 
@@ -23,15 +23,15 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
 
   test "uses default description when not provided" do
     @options.delete(:description)
-    
+
     response = X402Payments::ClientMessaging::PaymentRequiredResponse.generate(@options)
-    
+
     assert_equal "Payment required to access #{@options[:resource]}", response[:resource][:description]
   end
 
   test "class method delegates to instance method" do
     response = X402Payments::ClientMessaging::PaymentRequiredResponse.generate(@options)
-    
+
     assert_not_nil response
     assert response[:x402Version]
   end
@@ -39,14 +39,14 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
   test "build_response_object is publicly accessible" do
     skip "build_response_object is a private method and should not be publicly accessible"
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
-    accepts = ["base64encoded1"]
-    
+    accepts = [ "base64encoded1" ]
+
     response = instance.build_response_object(
       accepts: accepts,
       resource_url: "https://example.com/test",
       description: "Test description"
     )
-    
+
     assert_equal 2, response[:x402Version]
     assert_equal accepts, response[:accepts]
   end
@@ -55,7 +55,7 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     options = @options.merge(amount: " $1,234.56 ")
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
     normalized = instance.send(:normalize_options!, options)
-    
+
     assert_equal "1234.56", normalized[:amount]
   end
 
@@ -63,7 +63,7 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     options = @options.merge(chain: "base-sepolia")
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
     normalized = instance.send(:normalize_options!, options)
-    
+
     assert_equal "eip155:84532", normalized[:chain]
   end
 
@@ -71,7 +71,7 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     options = @options.merge(currency: "usdc")
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
     normalized = instance.send(:normalize_options!, options)
-    
+
     assert_equal "USDC", normalized[:currency]
   end
 
@@ -84,7 +84,7 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
 
   test "normalizes accepts array entries" do
     options = @options.merge(accepts: [
-      {chain: "base-sepolia", currency: "usdc", wallet_address: " 0xAbC123   "}
+      { chain: "base-sepolia", currency: "usdc", wallet_address: " 0xAbC123   " }
     ])
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
     normalized = instance.send(:normalize_options!, options)
@@ -141,5 +141,4 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
       instance.send(:validate_options!, invalid_options)
     end
   end
-
 end

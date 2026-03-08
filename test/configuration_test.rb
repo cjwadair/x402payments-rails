@@ -1,7 +1,6 @@
 require "test_helper"
 
 class ConfigurationTest < ActiveSupport::TestCase
-
   test "initializes with default values" do
     config = X402Payments::Configuration.new
     assert_equal "base-sepolia", config.chain
@@ -129,5 +128,4 @@ class ConfigurationTest < ActiveSupport::TestCase
     assert_equal "MATIC", payment[:currency]
     assert_equal "PolygonWalletAddress", payment[:wallet_address]
   end
-
 end

@@ -6,49 +6,49 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
     @payload = {
       x402Version: 2,
-      payload:{
-        authorization:{
+      payload: {
+        authorization: {
           from: "0x07B88Fa6bAA91384D07Ae419a08FdeC7e8908D2e",
           to: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
           value: "1000",
           validAfter: "1769958357",
           validBefore: "1769959257",
           nonce: "0x34567890123456..."
-        },			
-        signature:"0x1234567890abcdef..."	
+        },
+        signature: "0x1234567890abcdef..."
       },
-      resource:{
+      resource: {
         url: "https://example.com/protected_resource",
         description: "Access to protected resource",
         mimeType: "application/json"
       },
-      accepted:{
-        scheme: "exact", 
-        network: "eip155:84532", 
-        amount: "1000", 
+      accepted: {
+        scheme: "exact",
+        network: "eip155:84532",
+        amount: "1000",
         asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
         maxTimeoutSeconds: 600,
-        extra:{name: "USDC", version: "2"}
+        extra: { name: "USDC", version: "2" }
       },
       extensions: {}
     }
 
     @payment_requirements = {
-      scheme: "exact", 
-      network: "eip155:84532", 
-      amount: "1000", 
+      scheme: "exact",
+      network: "eip155:84532",
+      amount: "1000",
       asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
       max_timeout_seconds: 600,
-      extra: {name: "USDC", version: "2"}
+      extra: { name: "USDC", version: "2" }
     }
 
-    @expected_response_body = {		
-      success:true,
-      transaction:"0x086c2fe816640bd...",
-      network:"eip155:84532",
-      payer:"0x07B88Fa6bAA91384D07A..."
+    @expected_response_body = {
+      success: true,
+      transaction: "0x086c2fe816640bd...",
+      network: "eip155:84532",
+      payer: "0x07B88Fa6bAA91384D07A..."
     }
   end
 
@@ -56,9 +56,9 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     # Stub the facilitator response
     stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(
-        status: 200, 
+        status: 200,
         body: {
-          kinds: ["eip155:84532"],
+          kinds: [ "eip155:84532" ],
           extensions: [],
           signers: {
             "eip155:84532" => {
@@ -68,22 +68,22 @@ class FacilitatorClientTest < ActiveSupport::TestCase
           }
         }.to_json
       )
-    
+
     response = @client.supported_networks
-    
+
     # Structure
     assert response.is_a?(Hash)
     assert_not_empty response
-    assert_equal ["kinds", "extensions", "signers"].sort, response.keys.sort
-    
+    assert_equal [ "kinds", "extensions", "signers" ].sort, response.keys.sort
+
     # Kinds (payment types/networks)
     assert response["kinds"].is_a?(Array)
     assert_not_empty response["kinds"], "Should have at least one supported network"
-    
+
     # Signers
     assert response["signers"].is_a?(Hash)
     assert_not_empty response["signers"], "Should have signers configured"
-    
+
     # Extensions
     assert response["extensions"].is_a?(Array)
   end
@@ -91,21 +91,21 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   test "raises FacilitatorError if FaradayError returned when fetching supported networks" do
     stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_timeout
-    
+
     error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
     assert_match(/Failed to fetch supported networks:/, error.message)
   end
-    
+
   test "handles 500 series errors correctly" do
     stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 500)
-    
+
     error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
-    
+
     assert_match(/Facilitator error \(supported\): 500/, error.message)
   end
 
@@ -116,29 +116,29 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.supported_networks
     end
-    
+
     assert_match(/Invalid payment: Bad Request/, error.message)
   end
 
-  test 'handles unexpected response codes correctly' do
+  test "handles unexpected response codes correctly" do
     stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
       .to_return(status: 302)
-    
+
     error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
-    
+
     assert_match(/Unexpected response \(supported\): 302/, error.message)
   end
 
   test "handles invalid JSON response correctly" do
     stub_request(:get, "#{X402Payments.configuration.facilitator_url}/supported")
-      .to_return(status: 200, body: "Invalid JSON") 
-    
+      .to_return(status: 200, body: "Invalid JSON")
+
     error = assert_raises X402Payments::FacilitatorError do
       @client.supported_networks
     end
-    
+
     assert_match(/Failed to parse facilitator response/, error.message)
   end
 
@@ -146,29 +146,29 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     VCR.turned_off do
       stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
         .to_return(status: 200, body: @expected_response_body.to_json)
-        
+
       response = @client.verify_payment(@payload, @payment_requirements)
       assert response.is_a?(Hash)
-      assert_equal response.keys.sort, ["success", "transaction", "network", "payer"].sort
+      assert_equal response.keys.sort, [ "success", "transaction", "network", "payer" ].sort
     end
   end
 
   test "raises validator error if FaradayError returned when verifying payment" do
     stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_timeout
-    
+
     error = assert_raises X402Payments::FacilitatorError do
       @client.verify_payment(@payload, @payment_requirements)
     end
-    
+
     assert_match(/Failed to verify payment:/, error.message)
   end
-  
+
   test "builds payment request and receives valid response when submitting payment" do
     VCR.turned_off do
       stub_request(:post, "#{X402Payments.configuration.facilitator_url}/settle")
         .to_return(status: 200, body: @expected_response_body.to_json)
-        
+
       response = @client.settle_payment(@payload, @payment_requirements)
       assert response.is_a?(Hash)
       assert_equal response["success"], true
@@ -215,11 +215,11 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
     stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: invalid_response.to_json)
-    
+
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, @payment_requirements)
     end
-    
+
     assert_match(/no payer address returned/, error.message)
   end
 
@@ -232,11 +232,11 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
     stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: invalid_response.to_json)
-    
+
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, @payment_requirements)
     end
-    
+
     assert_match(/Facilitator validation failed: Insufficient funds/, error.message)
   end
 
@@ -249,11 +249,11 @@ class FacilitatorClientTest < ActiveSupport::TestCase
 
     stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: invalid_response.to_json)
-    
+
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, @payment_requirements)
     end
-    
+
     assert_match(/Facilitator validation failed: Invalid signature/, error.message)
   end
 
@@ -262,7 +262,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(nil, @payment_requirements)
     end
-    
+
     assert_match(/Payment payload cannot be nil/, error.message)
   end
 
@@ -270,12 +270,12 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment("invalid", @payment_requirements)
     end
-    
+
     assert_match(/Payment payload must be a Hash/, error.message)
   end
 
   test "raises error when payment payload missing accepted" do
-    invalid_payload = { payload:{signature: "0x123..."} }
+    invalid_payload = { payload: { signature: "0x123..." } }
 
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(invalid_payload, @payment_requirements)
@@ -318,7 +318,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, nil)
     end
-    
+
     assert_match(/Payment requirements cannot be nil/, error.message)
   end
 
@@ -330,11 +330,11 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       # asset is missing
       payTo: "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D"
     }
-    
+
     error = assert_raises X402Payments::InvalidPaymentError do
       @client.verify_payment(@payload, invalid_requirements)
     end
-    
+
     assert_match(/Payment requirements missing required field 'asset'/, error.message)
   end
 
@@ -360,17 +360,17 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         "mimeType" => "application/json"
       },
       "accepted" => {
-        "scheme" => "exact", 
+        "scheme" => "exact",
         "network" => "eip155:84532",
-        "amount" => "1000", 
+        "amount" => "1000",
         "asset" => "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         "payTo" => "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D",
         "maxTimeoutSeconds" => 600,
-        "extra" => {"name" => "USDC", "version" => "2"}
+        "extra" => { "name" => "USDC", "version" => "2" }
       },
       "extensions" => {}
     }
-    
+
     string_requirements = {
       "scheme" => "exact",
       "network" => "eip155:84532",
@@ -378,10 +378,10 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       "asset" => "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       "payTo" => "0x0613dA3bd559D9ECc5A662fB517Ff979CDE3E78D"
     }
-    
+
     stub_request(:post, "#{X402Payments.configuration.facilitator_url}/verify")
       .to_return(status: 200, body: @expected_response_body.to_json)
-    
+
     # Should not raise an error
     response = @client.verify_payment(string_payload, string_requirements)
     assert response.is_a?(Hash)
@@ -390,31 +390,31 @@ class FacilitatorClientTest < ActiveSupport::TestCase
   # Live API test - only runs when LIVE_API=true is set
   # Run with: LIVE_API=true rails test test/facilitator_client_test.rb
   test "verify_payment with real API call" do
-    skip "Skipping live API test - set LIVE_API=true to run" unless ENV['LIVE_API']
-    
+    skip "Skipping live API test - set LIVE_API=true to run" unless ENV["LIVE_API"]
+
     VCR.turned_off do
       WebMock.allow_net_connect!
-      
+
       begin
         # Enable Rails logging to console for debugging
         old_logger = Rails.logger
         Rails.logger = Logger.new(STDOUT)
         Rails.logger.level = Logger::INFO
-        
+
         puts "\n=== Making API Request ==="
         puts "URL: #{X402Payments.configuration.facilitator_url}/verify"
         puts "Full X402Payments Request:"
         puts JSON.pretty_generate(@payload)
-        
+
         response = @client.verify_payment(@payload, @payment_requirements)
-        
+
         # Assert the response structure
         assert response.is_a?(Hash)
         assert_includes response.keys, "payer"
-        
+
         # Check for success indicators
         assert(response["isValid"] || response["success"], "Payment should be valid")
-        
+
         # Log the response for inspection
         puts "\n=== Live API Response (SUCCESS) ==="
         puts JSON.pretty_generate(response)

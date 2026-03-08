@@ -1,8 +1,7 @@
 X402Payments.configure do |config|
-
   # Your wallet address (where payments will be received)
   # For testing, you can use a test wallet address
-  config.wallet_address = ENV.fetch("X402_WALLET_ADDRESS", '0x0613da3bd559d9ecc5a662fb517ff979cde3e78d')
+  config.wallet_address = ENV.fetch("X402_WALLET_ADDRESS", "0x0613da3bd559d9ecc5a662fb517ff979cde3e78d")
 
   # Facilitator URL (default: https://x402.org/facilitator)
   # The facilitator handles payment verification and settlement
@@ -10,7 +9,7 @@ X402Payments.configure do |config|
 
   # Default Network to use
   config.chain = ENV.fetch("X402_CHAIN", "base-sepolia")
-  
+
   # Default Currency to use
   config.currency = ENV.fetch("X402_CURRENCY", "USDC")
 

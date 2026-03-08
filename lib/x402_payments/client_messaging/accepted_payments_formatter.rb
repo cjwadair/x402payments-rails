@@ -49,7 +49,7 @@ module X402Payments
         result = nil
 
         if custom.present?
-          result = custom[:address] 
+          result = custom[:address]
         elsif currency.upcase == "USDC"
           builtin = X402Payments::Chains::CHAINS[chain_name]
           result = builtin[:usdc_address] if builtin && builtin[:usdc_address]

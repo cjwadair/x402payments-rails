@@ -24,11 +24,11 @@ module X402Payments
       end
 
       def build_from_chain(chain, currency)
-        [{
+        [ {
           chain: chain,
           currency: currency || X402Payments.configuration.currency || "USDC",
           wallet_address: nil
-        }]
+        } ]
       end
 
       def use_default_payments

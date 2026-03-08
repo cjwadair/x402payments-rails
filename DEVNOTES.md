@@ -28,3 +28,7 @@
 - Open the HTML report on macOS: `open coverage/index.html`.
 - The CI matrix job uploads coverage as artifacts named `coverage-ruby<RUBY>-rails<RAILS>`.
 - In GitHub Actions, open a workflow run and download the matching coverage artifact to inspect `coverage/index.html`.
+
+## Linting
+
+- bin/rubocop
