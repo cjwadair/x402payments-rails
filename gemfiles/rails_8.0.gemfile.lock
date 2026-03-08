@@ -97,6 +97,7 @@ GEM
       rexml
     crass (1.0.6)
     date (3.5.1)
+    docile (1.4.1)
     drb (2.2.3)
     erb (6.0.1)
     erubi (1.13.1)
@@ -132,8 +133,8 @@ GEM
       net-smtp
     marcel (1.1.0)
     mini_mime (1.1.5)
-    minitest (6.0.1)
-      prism (~> 1.5)
+    minitest (5.27.0)
+    minitest-mock (5.27.0)
     net-http (0.9.1)
       uri (>= 0.11.1)
     net-imap (0.6.3)
@@ -255,6 +256,12 @@ GEM
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
     securerandom (0.4.1)
+    simplecov (0.22.0)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.13.2)
+    simplecov_json_formatter (0.1.4)
     sqlite3 (2.9.0-aarch64-linux-gnu)
     sqlite3 (2.9.0-aarch64-linux-musl)
     sqlite3 (2.9.0-arm-linux-gnu)
@@ -297,9 +304,12 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal (~> 2.5)
+  minitest (< 6)
+  minitest-mock (~> 5.27)
   puma
   rails (~> 8.0.0)
   rubocop-rails-omakase
+  simplecov
   sqlite3
   vcr (~> 6.0)
   webmock (~> 3.0)
