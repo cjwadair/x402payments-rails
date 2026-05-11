@@ -59,12 +59,12 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     assert_equal "1234.56", normalized[:amount]
   end
 
-  test "normalizes chain to CAIP2 format if needed" do
-    options = @options.merge(chain: "base-sepolia")
+  test "normalizes CAIP2 format to chain name if needed" do
+    options = @options.merge(chain: "eip155:84532")
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
     normalized = instance.send(:normalize_options!, options)
 
-    assert_equal "eip155:84532", normalized[:chain]
+    assert_equal "base-sepolia", normalized[:chain]
   end
 
   test "normalizes currency to uppercase" do
@@ -88,7 +88,7 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     ])
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
     normalized = instance.send(:normalize_options!, options)
-    assert_equal "eip155:84532", normalized[:accepts][0][:chain]
+    assert_equal "base-sepolia", normalized[:accepts][0][:chain]
     assert_equal "USDC", normalized[:accepts][0][:currency]
     assert_equal "0xAbC123", normalized[:accepts][0][:wallet_address]
   end
@@ -137,6 +137,38 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
     instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
 
     invalid_options = @options.merge(wallet_address: :symbol)
+    assert_raises(X402Payments::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_options)
+    end
+  end
+
+   test "it does not raise error if evm wallet_address format is valid" do
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    valid_options = @options.merge(chain: "base-sepolia", wallet_address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+    assert_nothing_raised do
+      instance.send(:validate_options!, valid_options)
+    end
+  end
+
+  test "raises error if evm wallet_address format is invalid" do
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    invalid_options = @options.merge(chain: "base-sepolia", wallet_address: "invalid_address")
+    assert_raises(X402Payments::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_options)
+    end
+  end
+
+  test "it does not raise error if solana wallet_address format is valid" do
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    valid_options = @options.merge(chain: "solana", wallet_address: "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5")
+    assert_nothing_raised do
+      instance.send(:validate_options!, valid_options)
+    end
+  end
+
+  test "raises error if solana wallet_address format is invalid" do
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    invalid_options = @options.merge(chain: "solana", wallet_address: "invalid_address")
     assert_raises(X402Payments::ClientMessaging::InvalidPaymentOptionsError) do
       instance.send(:validate_options!, invalid_options)
     end

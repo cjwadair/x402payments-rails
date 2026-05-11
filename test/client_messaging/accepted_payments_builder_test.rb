@@ -59,6 +59,24 @@ class AcceptedPaymentsBuilderTest < ActiveSupport::TestCase
     end
   end
 
+  test "builds solana payment with feePayer when chain is specified via accepts array" do
+    # Reproduces the case where chain: is not a top-level option but is inside accepts —
+    # options[:chain] is nil while the resolved payment[:chain] is "solana".
+    options = {
+      amount: 1.0,
+      accepts: [ { chain: "solana", currency: "USDC", wallet_address: "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5" } ]
+    }
+
+    result = @builder.build(options)
+
+    assert_equal 1, result.size
+    payment = result.first
+    assert_equal "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", payment[:network]
+    assert payment[:extra][:feePayer], "feePayer should be present for Solana payments"
+    assert_nil payment[:extra][:name], "name should not be set for Solana payments"
+    assert_nil payment[:extra][:version], "version should not be set for Solana payments"
+  end
+
   test "resolves multiple payment options when accepts is array" do
     options = {
       amount: 1.00,

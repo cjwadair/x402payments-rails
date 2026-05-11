@@ -69,14 +69,14 @@ module X402Payments
         normalized
       end
 
+      #converts from CAIP2 format to chain name if needed, otherwise returns original value
       def normalize_chain(chain)
-        if chain.present? && chain.exclude?(":")
-          # Convert CAIP2 format to chain name
-          caip2 = X402Payments.to_caip2(chain.to_s.downcase)
-          chain = caip2 if caip2.present?
+        if chain.present? && chain.include?(":")
+          chain_name = X402Payments.from_caip2(chain.to_s)
+          chain = chain_name if chain_name.present?
         end
         chain
-      end
+      end 
 
       def normalize_currency(currency)
         if currency.present?
@@ -114,7 +114,8 @@ module X402Payments
         # Checks that supplied chain option is a supported chain
         if options[:chain].present?
           chain = options[:chain]
-          unless X402Payments.supported_chains.include?(chain.to_s.downcase)
+          known_chains = X402Payments::Chains::CHAINS.keys + X402Payments.configuration.custom_chains.keys
+          unless known_chains.include?(chain.to_s)
             raise InvalidPaymentOptionsError, "Unsupported chain: #{chain}"
           end
         end

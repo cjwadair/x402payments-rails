@@ -50,6 +50,16 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     assert_equal "10123456", response[:amount] # 10.123456 * 10^6
   end
 
+  test "converts amounts that are imprecise in float arithmetic without off-by-one errors" do
+    payment = { chain: "base-sepolia", currency: "USDC" }
+
+    # 0.1 * 10^6 in float gives 99999 due to binary representation — BigDecimal must give 100000
+    assert_equal "100000",  @formatter.format(payment, options_for(0.1))[:amount]
+    assert_equal "200000",  @formatter.format(payment, options_for(0.2))[:amount]
+    assert_equal "50000",   @formatter.format(payment, options_for(0.05))[:amount]
+    assert_equal "1000000", @formatter.format(payment, options_for(1.0))[:amount]
+  end
+
   test "formats network using CAIP2 mapping" do
     payment = { chain: "avalanche", currency: "USDC" }
     options = { amount: 1.0 }
@@ -92,6 +102,20 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     assert_nil response[:extra][:version]
   end
 
+  test "formats solana payment with feePayer when chain is absent from options (global config scenario)" do
+    # Reproduces the case where chain comes from global config or default_accepted_payments,
+    # not from an explicit chain: option — options[:chain] is nil, payment[:chain] is "solana".
+    payment = { chain: "solana", currency: "USDC" }
+    options = { amount: 1.0 }
+
+    response = @formatter.format(payment, options)
+
+    assert_equal "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", response[:network]
+    assert response[:extra][:feePayer], "feePayer should be present for Solana payments"
+    assert_nil response[:extra][:name], "name should not be set for Solana payments"
+    assert_nil response[:extra][:version], "version should not be set for Solana payments"
+  end
+
   test "uses custom token config when registered" do
     X402Payments.configuration.register_token(
       chain: "base",
@@ -122,5 +146,11 @@ class AcceptedPaymentsFormatterTest < ActiveSupport::TestCase
     end
 
     assert_includes error.message, "Unknown token UNKNOWN for chain base. Register with config.register_token()"
+  end
+
+  private
+
+  def options_for(amount)
+    { amount: amount }
   end
 end

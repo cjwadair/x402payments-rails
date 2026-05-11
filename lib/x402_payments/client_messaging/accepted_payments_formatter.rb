@@ -1,11 +1,14 @@
+require "bigdecimal"
+
 module X402Payments
   module ClientMessaging
     class AcceptedPaymentsFormatter
       def format(payment, options)
+        
         token_config = get_token_config(payment)
         asset_address = get_asset_address(payment)
         atomic_amount = convert_to_atomic_units(options[:amount], token_config[:decimals])
-        extra_data = build_extra_data(options, token_config)
+        extra_data = build_extra_data(payment, options, token_config)
         formatted_network = format_network(payment[:chain])
         wallet_address = resolve_wallet_address(payment, options)
 
@@ -57,18 +60,15 @@ module X402Payments
       end
 
       def convert_to_atomic_units(amount, decimals)
-        (amount.to_f * (10 ** decimals)).to_i
+        (BigDecimal(amount.to_s) * 10**decimals).to_i
       end
 
-      def build_extra_data(options, token_config)
-        extra_data = {}
-        if X402Payments.solana_chain?(options[:chain])
-          extra_data[:feePayer] = options[:fee_payer] || X402Payments.fee_payer_for(options[:chain])
+      def build_extra_data(payment, options, token_config)
+        if X402Payments.solana_chain?(payment[:chain])
+          { feePayer: options[:fee_payer] || X402Payments.fee_payer_for(payment[:chain]) }
         else
-          extra_data[:name] = token_config[:name]
-          extra_data[:version] = token_config[:version]
+          { name: token_config[:name], version: token_config[:version] }
         end
-        extra_data
       end
 
       def format_network(chain)
