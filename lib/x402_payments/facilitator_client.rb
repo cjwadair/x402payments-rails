@@ -32,10 +32,17 @@ module X402Payments
       validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
 
+      ::Rails.logger.info("=== X402Payments Settle Request ===")
+      ::Rails.logger.info("URL: #{@facilitator_url}/settle")
+      ::Rails.logger.info("Request body: #{request_body}")
+
       response = connection.post("settle") do |req|
         req.headers["Content-Type"] = "application/json"
         req.body = request_body
       end
+
+      ::Rails.logger.info("Response status: #{response.status}")
+      ::Rails.logger.info("Response body: #{response.body}")
 
       handle_response(response, "settle")
     rescue Faraday::Error => e
@@ -53,10 +60,11 @@ module X402Payments
 
     def connection
       Faraday.new(url: @facilitator_url) do |faraday|
-        # faraday.request  :url_encoded
-        # faraday.response :logger
+        faraday.options.timeout      = 5   # read timeout
+        faraday.options.open_timeout = 2   # connect timeout
         faraday.adapter Faraday.default_adapter
       end
+
     end
 
     def handle_response(response, action)
@@ -80,7 +88,7 @@ module X402Payments
 
         body
       when 400
-        error_body = JSON.parse(response.body) rescue {}
+        error_body = JSON.parse(response.body)
         raise InvalidPaymentError, "Invalid payment: #{error_body['error'] || response.body}"
       when 500..599
         raise FacilitatorError, "Facilitator error (#{action}): #{response.status}"
@@ -93,7 +101,7 @@ module X402Payments
 
     def request_body(payload, requirements)
       {
-        x402Version: 2,
+        x402Version: X402Payments::PROTOCOL_VERSION,
         authorization: payload[:authorization],
         signature: payload[:signature],
         paymentPayload: payload,

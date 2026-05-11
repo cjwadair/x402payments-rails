@@ -1,5 +1,3 @@
-require "x402_payments/controller_extensions"
-
 module X402Payments
   class Railtie < ::Rails::Railtie
     initializer "x402_payments.controller_extensions" do
@@ -8,8 +6,8 @@ module X402Payments
       end
     end
 
-    initializer "x402_payments.configuration" do
-      # Configuration will be loaded from initializers/x402_payments.rb if it exists
-    end
+    # initializer "x402_payments.configuration" do
+    #   # Configuration will be loaded from initializers/x402_payments.rb if it exists
+    # end
   end
 end

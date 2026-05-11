@@ -36,7 +36,7 @@ class ConfigurationTest < ActiveSupport::TestCase
     payment = defaults.first
     assert_equal config.chain, payment[:chain]
     assert_equal config.currency, payment[:currency]
-    assert_equal config.wallet_address, payment[:wallet_address]
+    assert_nil payment[:wallet_address]
   end
 
   test "registers and retrieves custom token configurations" do

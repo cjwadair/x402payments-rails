@@ -13,6 +13,9 @@ require "x402_payments/client_messaging/payment_required_response"
 require "x402_payments/facilitator_messaging/settlement_request"
 
 module X402Payments
+  PROTOCOL_VERSION    = 2
+  MAX_TIMEOUT_SECONDS = 600
+
   extend Chains
 
   class << self

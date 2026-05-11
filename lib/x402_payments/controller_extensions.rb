@@ -33,6 +33,11 @@ module X402Payments
 
     private
 
+    def facilitator_client
+      @facilitator_client ||= X402Payments::FacilitatorClient.new
+    end
+
+
     # note -- does not block payment if the settlement ultimately fails -- this is a best effort attempt to settle after verification, but does not impact access to the resource.
     def settle_deferred_payment
       if X402Payments.configuration.optimistic && @verified_payment.is_a?(Hash)
@@ -54,8 +59,6 @@ module X402Payments
         description: "Payment required to access #{request.path}"
       })
 
-      puts "Generating payment required response with options: #{updated_options.inspect}"
-
       begin
         X402Payments::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
       rescue X402Payments::ClientMessaging::InvalidPaymentOptionsError => e
@@ -63,23 +66,6 @@ module X402Payments
         raise ArgumentError.new("Invalid payment options: #{e.message}")
       end
     end
-
-    # def process_payment(payment_header, required_payment)
-
-    #   verified_payment = verify_payment(payment_header, required_payment)
-
-    #   unless verified_payment
-    #     return render_402_response(required_payment)
-    #   end
-
-    #   unless X402Payments.configuration.optimistic
-    #     settlement_response = settle_payment(verified_payment)
-
-    #     unless settlement_response && settlement_response["success"]
-    #       return render_402_response(required_payment)
-    #     end
-    #   end
-    # end
 
     def verify_payment(payment_header, required_payment)
       # payment header is base64 encode signed authorization payload
@@ -108,7 +94,7 @@ module X402Payments
 
       # Verify payment with facilitator (external verification)
       begin
-        verify_result = X402Payments::FacilitatorClient.new.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+        verify_result = facilitator_client.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
       rescue X402Payments::InvalidPaymentError => e
         ::Rails.logger.error "Invalid payment: #{e.message}"
         return nil
@@ -125,15 +111,13 @@ module X402Payments
 
     def settle_payment(settlement_request)
       begin
-        settlement_response = X402Payments::FacilitatorClient.new.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+        settlement_response = facilitator_client.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
 
-        # step5 - handle settlement response
         if settlement_response["success"]
-          # payment settled successfully -- allow access to resource
           ::Rails.logger.info "Payment settled successfully: #{settlement_response.inspect}"
-
-          # add the PAYMENT-RESPONSE header with settlement details for client reference
           response.headers["PAYMENT-RESPONSE"] = Base64.strict_encode64(settlement_response.to_json)
+        else
+          ::Rails.logger.warn "Settlement unsuccessful: #{settlement_response.inspect}"
         end
 
         settlement_response
@@ -152,6 +136,7 @@ module X402Payments
         JSON.parse(decoded, symbolize_names: true)
       rescue => e
         # Sanitize the error message to remove invalid UTF-8 that could cause issues
+        ::Rails.logger.error "Failed to decode payment header: #{e.message}"
         safe_message = e.message.encode("UTF-8", invalid: :replace, undef: :replace)
         raise RuntimeError, "Invalid payment signature header: #{safe_message}"
       end

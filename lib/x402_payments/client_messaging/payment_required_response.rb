@@ -19,8 +19,6 @@ module X402Payments
           description: normalized_options[:description]
         )
 
-        puts "X402Payments response object: #{response.inspect}"
-
         response
       end
 
@@ -28,7 +26,7 @@ module X402Payments
 
       def build_response_object(accepts:, resource_url:, description:)
         {
-          x402Version: 2,
+          x402Version: X402Payments::PROTOCOL_VERSION,
           error: "Payment required to access this resource",
           resource: {
             url: resource_url,
@@ -113,7 +111,7 @@ module X402Payments
           end
         end
 
-        # Checks that supplied chain option is a suppored chain
+        # Checks that supplied chain option is a supported chain
         if options[:chain].present?
           chain = options[:chain]
           unless X402Payments.supported_chains.include?(chain.to_s.downcase)
@@ -137,12 +135,25 @@ module X402Payments
           end
         end
 
-        # Validate wallet_address format if provided
-        # TODO -- Add checks to confirm wallet address matches expected format and string length for a valid evm or solana wallet address
         if options[:wallet_address].present?
           wallet_address = options[:wallet_address]
           unless wallet_address.is_a?(String) && wallet_address.length > 0
             raise InvalidPaymentOptionsError, "wallet_address must be a non-empty string"
+          end
+          if options[:chain].present?
+            if X402Payments.solana_chain?(options[:chain])
+              unless wallet_address.match?(/\A[A-Za-z0-9]{32,44}\z/)
+                raise InvalidPaymentOptionsError, "wallet_address format is invalid for Solana: #{wallet_address}"
+              end
+            else
+              unless wallet_address.match?(/\A0x[a-fA-F0-9]{40}\z/)
+                raise InvalidPaymentOptionsError, "wallet_address format is invalid for EVM: #{wallet_address}"
+              end
+            end
+          else
+            unless wallet_address.match?(/\A0x[a-fA-F0-9]{40}\z/) || wallet_address.match?(/\A[A-Za-z0-9]{32,44}\z/)
+              raise InvalidPaymentOptionsError, "wallet_address format is invalid: #{wallet_address}"
+            end
           end
         end
       end

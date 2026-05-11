@@ -16,8 +16,6 @@ module X402Payments
       end
 
       def generate
-        puts "Payload: #{payload.inspect}"
-        puts "accepted payments: #{accepted_payments.inspect}"
 
         find_matching_accept!
         validate_inputs!
@@ -26,7 +24,7 @@ module X402Payments
         payment_requirements = build_requirements_object
 
         {
-          x402Version: 2,
+          x402Version: X402Payments::PROTOCOL_VERSION,
           paymentPayload: formatted_payload,
           paymentRequirements: payment_requirements
         }
@@ -120,7 +118,7 @@ module X402Payments
 
       def build_formatted_payload
         {
-          x402Version: 2,
+          x402Version: X402Payments::PROTOCOL_VERSION,
           accepted: payload[:accepted],
           payload: payload[:payload],
           extensions: {},

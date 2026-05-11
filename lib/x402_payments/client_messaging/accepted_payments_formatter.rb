@@ -15,11 +15,9 @@ module X402Payments
           amount: atomic_amount.to_s,
           asset: asset_address,
           payTo: wallet_address,
-          maxTimeoutSeconds: 600,
+          maxTimeoutSeconds: X402Payments::MAX_TIMEOUT_SECONDS,
           extra: extra_data
         }
-
-        puts "Formatted accepted payment: #{response.inspect}"
 
         response
       end

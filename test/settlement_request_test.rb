@@ -46,8 +46,6 @@ class SettlementRequestTest < ActiveSupport::TestCase
   test "generates valid settlement request with correct structure" do
     settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
 
-    puts "settlement_request: #{settlement_request.inspect}"
-
     assert_equal 2, settlement_request[:x402Version]
     assert settlement_request[:paymentPayload].is_a?(Hash)
     assert settlement_request[:paymentRequirements].is_a?(Hash)
