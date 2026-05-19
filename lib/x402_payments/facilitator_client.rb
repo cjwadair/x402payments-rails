@@ -13,17 +13,17 @@ module X402Payments
       validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
 
-      ::Rails.logger.info("=== X402Payments Verify Request ===")
-      ::Rails.logger.info("URL: #{@facilitator_url}/verify")
-      ::Rails.logger.info("Request body: #{request_body}")
+      ::Rails.logger.debug("=== X402Payments Verify Request ===")
+      ::Rails.logger.debug("URL: #{@facilitator_url}/verify")
+      ::Rails.logger.debug("Request body: #{request_body}")
 
       response = connection.post("verify") do |req|
         req.headers["Content-Type"] = "application/json"
         req.body = request_body
       end
 
-      ::Rails.logger.info("Response status: #{response.status}")
-      ::Rails.logger.info("Response body: #{response.body}")
+      ::Rails.logger.debug("Response status: #{response.status}")
+      ::Rails.logger.debug("Response body: #{response.body}")
 
       handle_verify_response(response)
     rescue Faraday::Error => e
@@ -34,17 +34,17 @@ module X402Payments
       validate_request(payment_payload, payment_requirements)
       request_body = request_body(payment_payload, payment_requirements)
 
-      ::Rails.logger.info("=== X402Payments Settle Request ===")
-      ::Rails.logger.info("URL: #{@facilitator_url}/settle")
-      ::Rails.logger.info("Request body: #{request_body}")
+      ::Rails.logger.debug("=== X402Payments Settle Request ===")
+      ::Rails.logger.debug("URL: #{@facilitator_url}/settle")
+      ::Rails.logger.debug("Request body: #{request_body}")
 
       response = connection.post("settle") do |req|
         req.headers["Content-Type"] = "application/json"
         req.body = request_body
       end
 
-      ::Rails.logger.info("Response status: #{response.status}")
-      ::Rails.logger.info("Response body: #{response.body}")
+      ::Rails.logger.debug("Response status: #{response.status}")
+      ::Rails.logger.debug("Response body: #{response.body}")
 
       handle_response(response)
     rescue Faraday::Error => e
@@ -96,8 +96,8 @@ module X402Payments
     def request_body(payload, requirements)
       {
         x402Version: X402Payments::PROTOCOL_VERSION,
-        authorization: payload[:authorization],
-        signature: payload[:signature],
+        authorization: payload.dig(:payload, :authorization),
+        signature: payload.dig(:payload, :signature),
         paymentPayload: payload,
         paymentRequirements: requirements
       }.to_json

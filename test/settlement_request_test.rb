@@ -51,6 +51,12 @@ class SettlementRequestTest < ActiveSupport::TestCase
     assert settlement_request[:paymentRequirements].is_a?(Hash)
   end
 
+  test "paymentPayload contains correct data from payload" do
+    settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
+    assert_equal @valid_payload[:payload], settlement_request[:paymentPayload][:payload]
+    assert_equal @valid_payload[:accepted], settlement_request[:paymentPayload][:accepted]
+  end
+
   test "calling self.generate with valid payload returns expected settlement request structure" do
     settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.generate(@valid_payload, @accepted_payments)
     assert settlement_request.is_a?(Hash)
@@ -67,6 +73,13 @@ class SettlementRequestTest < ActiveSupport::TestCase
   test "paymentRequirements matches accepted payment" do
     settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(@valid_payload, @accepted_payments).generate
     assert_equal @accepted_payments.first, settlement_request[:paymentRequirements]
+    assert_equal settlement_request[:paymentRequirements][:scheme], @accepted_payments.first[:scheme]
+    assert_equal settlement_request[:paymentRequirements][:network], @accepted_payments.first[:network]
+    assert_equal settlement_request[:paymentRequirements][:amount], @accepted_payments.first[:amount]
+    assert_equal settlement_request[:paymentRequirements][:asset], @accepted_payments.first[:asset]
+    assert_equal settlement_request[:paymentRequirements][:payTo], @accepted_payments.first[:payTo]
+    assert_equal settlement_request[:paymentRequirements][:maxTimeoutSeconds], @accepted_payments.first[:maxTimeoutSeconds]
+    assert_equal settlement_request[:paymentRequirements][:extra], @accepted_payments.first[:extra]
   end
 
   test "raises error for missing accepted payment info in payload" do

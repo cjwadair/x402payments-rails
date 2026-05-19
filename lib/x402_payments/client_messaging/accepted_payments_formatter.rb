@@ -57,9 +57,9 @@ def convert_to_atomic_units(amount, decimals)
       end
 
       def format_network(chain)
-        caip2 = X402Payments::Chains::CAIP2_MAPPING[chain]
-        raise X402Payments::ConfigurationError, "Unknown chain #{chain}. Register with config.register_chain()" unless caip2
-        caip2
+        X402Payments.to_caip2(chain)
+      rescue X402Payments::ConfigurationError
+        raise X402Payments::ConfigurationError, "Unknown chain #{chain}. Register with config.register_chain()"
       end
 
       def resolve_wallet_address(payment, options)
