@@ -78,6 +78,4 @@ module X402Payments
       @custom_chains[name]
     end
   end
-
-  class ConfigurationError < StandardError; end
 end

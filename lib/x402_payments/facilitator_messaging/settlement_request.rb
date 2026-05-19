@@ -2,8 +2,6 @@
 
 module X402Payments
   module FacilitatorMessaging
-    class InvalidSettlementRequestError < StandardError; end
-
     class SettlementRequest
       def self.generate(payload, accepted_payments)
         new(payload, accepted_payments).generate

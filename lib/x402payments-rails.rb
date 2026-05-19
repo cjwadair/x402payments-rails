@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "x402_payments/version"
+require "x402_payments/errors"
 require "x402_payments/railtie"
 require "x402_payments/configuration"
 require "x402_payments/chains"

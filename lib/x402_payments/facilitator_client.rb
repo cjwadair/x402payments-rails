@@ -135,8 +135,4 @@ module X402Payments
       end
     end
   end
-
-
-  class FacilitatorError < StandardError; end
-  class InvalidPaymentError < StandardError; end
 end

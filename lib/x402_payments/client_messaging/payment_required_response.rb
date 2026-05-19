@@ -2,8 +2,6 @@
 
 module X402Payments
   module ClientMessaging
-    class InvalidPaymentOptionsError < StandardError; end
-
     class PaymentRequiredResponse
       def self.generate(options = {})
         new.generate(options)
