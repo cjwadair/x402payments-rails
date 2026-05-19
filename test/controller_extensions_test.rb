@@ -67,6 +67,15 @@ class ControllerExtensionsTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "malformed payment header returns 402 not 500" do
+    malformed_header = Base64.strict_encode64("this is not valid json {{{")
+
+    get "/api/premium_content/paywalled_info", headers: { "PAYMENT-SIGNATURE" => malformed_header }
+
+    assert_response :payment_required
+    assert_not_nil response.headers["PAYMENT-REQUIRED"]
+  end
+
   private
 
   def stub_settlement_request

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "faraday"
 require "json"
 
@@ -23,7 +25,7 @@ module X402Payments
       ::Rails.logger.info("Response status: #{response.status}")
       ::Rails.logger.info("Response body: #{response.body}")
 
-      handle_response(response, "verify")
+      handle_verify_response(response)
     rescue Faraday::Error => e
       raise FacilitatorError, "Failed to verify payment: #{e.message}"
     end
@@ -44,14 +46,14 @@ module X402Payments
       ::Rails.logger.info("Response status: #{response.status}")
       ::Rails.logger.info("Response body: #{response.body}")
 
-      handle_response(response, "settle")
+      handle_response(response)
     rescue Faraday::Error => e
       raise FacilitatorError, "Failed to settle payment: #{e.message}"
     end
 
     def supported_networks
       response = connection.get("supported")
-      handle_response(response, "supported")
+      handle_response(response)
     rescue Faraday::Error => e
       raise FacilitatorError, "Failed to fetch supported networks: #{e.message}"
     end
@@ -67,33 +69,25 @@ module X402Payments
 
     end
 
-    def handle_response(response, action)
+    def handle_verify_response(response)
+      body = handle_response(response)
+      is_valid = body["isValid"] || body["success"]
+      raise InvalidPaymentError, "Facilitator validation failed: #{body['invalidReason'] || body['error']}" unless is_valid
+      raise InvalidPaymentError, "Verification failed: no payer address returned" if body["payer"].nil?
+      body
+    end
+
+    def handle_response(response)
       case response.status
       when 200..299
-        body = JSON.parse(response.body)
-
-        # For verify action, validate the response payload
-        if action == "verify"
-          # Check if response indicates success (could be 'success' or 'isValid' depending on API version)
-          is_valid = body["isValid"] || body["success"]
-
-          unless is_valid
-            raise InvalidPaymentError, "Facilitator validation failed: #{body['invalidReason'] || body['error']}"
-          end
-
-          if body["payer"].nil?
-            raise InvalidPaymentError, "Verification failed: no payer address returned"
-          end
-        end
-
-        body
+        JSON.parse(response.body)
       when 400
         error_body = JSON.parse(response.body)
         raise InvalidPaymentError, "Invalid payment: #{error_body['error'] || response.body}"
       when 500..599
-        raise FacilitatorError, "Facilitator error (#{action}): #{response.status}"
+        raise FacilitatorError, "Facilitator error: #{response.status}"
       else
-        raise FacilitatorError, "Unexpected response (#{action}): #{response.status}"
+        raise FacilitatorError, "Unexpected response: #{response.status}"
       end
     rescue JSON::ParserError => e
       raise FacilitatorError, "Failed to parse facilitator response: #{e.message}"

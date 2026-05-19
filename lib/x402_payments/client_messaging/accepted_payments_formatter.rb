@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "bigdecimal"
 
 module X402Payments
@@ -6,7 +8,7 @@ module X402Payments
       def format(payment, options)
         
         token_config = get_token_config(payment)
-        asset_address = get_asset_address(payment)
+        asset_address = token_config[:address]
         atomic_amount = convert_to_atomic_units(options[:amount], token_config[:decimals])
         extra_data = build_extra_data(payment, options, token_config)
         formatted_network = format_network(payment[:chain])
@@ -35,31 +37,14 @@ module X402Payments
         if custom
           custom
         elsif currency.upcase == "USDC" && X402Payments::Chains::CURRENCY_BY_CHAIN[chain_name]
-          X402Payments::Chains::CURRENCY_BY_CHAIN[chain_name]
+          builtin = X402Payments::Chains::CHAINS[chain_name]
+          X402Payments::Chains::CURRENCY_BY_CHAIN[chain_name].merge(address: builtin[:usdc_address])
         else
           raise X402Payments::ConfigurationError, "Unknown token #{currency} for chain #{chain_name}. Register with config.register_token()"
         end
       end
 
-      def get_asset_address(payment)
-        currency = payment[:currency] || X402Payments.configuration.currency
-        chain_name = payment[:chain]
-
-        custom = X402Payments.configuration.token_config(chain_name, currency)
-
-        result = nil
-
-        if custom.present?
-          result = custom[:address]
-        elsif currency.upcase == "USDC"
-          builtin = X402Payments::Chains::CHAINS[chain_name]
-          result = builtin[:usdc_address] if builtin && builtin[:usdc_address]
-        end
-
-        result || (raise X402Payments::ConfigurationError, "No asset address found for token #{currency} on chain #{chain_name}")
-      end
-
-      def convert_to_atomic_units(amount, decimals)
+def convert_to_atomic_units(amount, decimals)
         (BigDecimal(amount.to_s) * 10**decimals).to_i
       end
 

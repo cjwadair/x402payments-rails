@@ -98,7 +98,9 @@ module X402Payments
       SOLANA_CHAINS.include?(chain) || chain.start_with?("solana:")
     end
 
+    # NOTE :: Will return true if supplied with a chain name that is not evm or solana. 
     def evm_chain?(chain_name)
+      return false if chain_name.nil? 
       !solana_chain?(chain_name)
     end
 

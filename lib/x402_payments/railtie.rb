@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module X402Payments
   class Railtie < ::Rails::Railtie
     initializer "x402_payments.controller_extensions" do

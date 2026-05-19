@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module X402Payments
   module FacilitatorMessaging
     class InvalidSettlementRequestError < StandardError; end

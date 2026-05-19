@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module X402Payments
   module ClientMessaging
     class InvalidPaymentOptionsError < StandardError; end
@@ -93,68 +95,70 @@ module X402Payments
       end
 
       def validate_options!(options)
-        # Validate amount (detailed checks)
-        if options[:amount].present?
-          amount = options[:amount]
+        validate_amount!(options[:amount])
+        validate_chain!(options[:chain])
+        validate_accepts!(options[:accepts])
+        validate_currency!(options[:currency])
+        validate_wallet_address!(options[:wallet_address], options[:chain])
+      end
 
-          # Check if amount is numeric
-          unless amount.is_a?(Numeric) || (amount.is_a?(String) && amount.match?(/\A\d+(\.\d+)?\z/))
-            raise InvalidPaymentOptionsError, "amount must be a number, got: #{amount.inspect}"
-          end
+      def validate_amount!(amount)
+        return unless amount.present?
 
-          # Convert to float for validation
-          amount_value = amount.to_f
-
-          # Check if amount is positive
-          if amount_value <= 0
-            raise InvalidPaymentOptionsError, "amount must be positive, got: #{amount_value}"
-          end
+        unless amount.is_a?(Numeric) || (amount.is_a?(String) && amount.match?(/\A\d+(\.\d+)?\z/))
+          raise InvalidPaymentOptionsError, "amount must be a number, got: #{amount.inspect}"
         end
 
-        # Checks that supplied chain option is a supported chain
-        if options[:chain].present?
-          chain = options[:chain]
-          known_chains = X402Payments::Chains::CHAINS.keys + X402Payments.configuration.custom_chains.keys
-          unless known_chains.include?(chain.to_s)
-            raise InvalidPaymentOptionsError, "Unsupported chain: #{chain}"
-          end
+        if amount.to_f <= 0
+          raise InvalidPaymentOptionsError, "amount must be positive, got: #{amount.to_f}"
+        end
+      end
+
+      def validate_chain!(chain)
+        return unless chain.present?
+
+        known_chains = X402Payments::Chains::CHAINS.keys + X402Payments.configuration.custom_chains.keys
+        unless known_chains.include?(chain.to_s)
+          raise InvalidPaymentOptionsError, "Unsupported chain: #{chain}"
+        end
+      end
+
+      def validate_accepts!(accepts)
+        return unless accepts.present?
+
+        unless accepts.is_a?(Array)
+          raise InvalidPaymentOptionsError, "accepts must be an array, got: #{accepts.class}"
+        end
+      end
+
+      def validate_currency!(currency)
+        return unless currency.present?
+
+        unless currency.is_a?(String)
+          raise InvalidPaymentOptionsError, "currency must be a string, got: #{currency.class}"
+        end
+      end
+
+      def validate_wallet_address!(wallet_address, chain)
+        return unless wallet_address.present?
+
+        unless wallet_address.is_a?(String) && wallet_address.length > 0
+          raise InvalidPaymentOptionsError, "wallet_address must be a non-empty string"
         end
 
-        # Validate accepts if provided (should be an array)
-        if options[:accepts].present?
-          unless options[:accepts].is_a?(Array)
-            raise InvalidPaymentOptionsError, "accepts must be an array, got: #{options[:accepts].class}"
-          end
-        end
-
-        # Validate currency if provided
-        # TODO -- Add check if currency is supported
-        if options[:currency].present?
-          currency = options[:currency]
-          unless currency.is_a?(String)
-            raise InvalidPaymentOptionsError, "currency must be a string, got: #{currency.class}"
-          end
-        end
-
-        if options[:wallet_address].present?
-          wallet_address = options[:wallet_address]
-          unless wallet_address.is_a?(String) && wallet_address.length > 0
-            raise InvalidPaymentOptionsError, "wallet_address must be a non-empty string"
-          end
-          if options[:chain].present?
-            if X402Payments.solana_chain?(options[:chain])
-              unless wallet_address.match?(/\A[A-Za-z0-9]{32,44}\z/)
-                raise InvalidPaymentOptionsError, "wallet_address format is invalid for Solana: #{wallet_address}"
-              end
-            else
-              unless wallet_address.match?(/\A0x[a-fA-F0-9]{40}\z/)
-                raise InvalidPaymentOptionsError, "wallet_address format is invalid for EVM: #{wallet_address}"
-              end
+        if chain.present?
+          if X402Payments.solana_chain?(chain)
+            unless wallet_address.match?(/\A[A-Za-z0-9]{32,44}\z/)
+              raise InvalidPaymentOptionsError, "wallet_address format is invalid for Solana: #{wallet_address}"
             end
           else
-            unless wallet_address.match?(/\A0x[a-fA-F0-9]{40}\z/) || wallet_address.match?(/\A[A-Za-z0-9]{32,44}\z/)
-              raise InvalidPaymentOptionsError, "wallet_address format is invalid: #{wallet_address}"
+            unless wallet_address.match?(/\A0x[a-fA-F0-9]{40}\z/)
+              raise InvalidPaymentOptionsError, "wallet_address format is invalid for EVM: #{wallet_address}"
             end
+          end
+        else
+          unless wallet_address.match?(/\A0x[a-fA-F0-9]{40}\z/) || wallet_address.match?(/\A[A-Za-z0-9]{32,44}\z/)
+            raise InvalidPaymentOptionsError, "wallet_address format is invalid: #{wallet_address}"
           end
         end
       end

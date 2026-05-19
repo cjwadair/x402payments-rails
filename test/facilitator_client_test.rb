@@ -106,7 +106,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       @client.supported_networks
     end
 
-    assert_match(/Facilitator error \(supported\): 500/, error.message)
+    assert_match(/Facilitator error: 500/, error.message)
   end
 
   test "400 response raises expected error correctly" do
@@ -128,7 +128,7 @@ class FacilitatorClientTest < ActiveSupport::TestCase
       @client.supported_networks
     end
 
-    assert_match(/Unexpected response \(supported\): 302/, error.message)
+    assert_match(/Unexpected response: 302/, error.message)
   end
 
   test "handles invalid JSON response correctly" do

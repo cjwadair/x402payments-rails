@@ -341,12 +341,12 @@ class PremiumContentTest < ActionDispatch::IntegrationTest
     assert_equal "This is free content accessible to all users.", json_response["message"]
   end
 
-  test "invalid payment header triggers expected error" do
+  test "invalid payment header triggers payment required" do
     invalid_signature = "not-a-valid-base64"
-    error = assert_raises(RuntimeError) do
-      get "/api/premium_content/paywalled_info", headers: { "PAYMENT-SIGNATURE" => invalid_signature }
-    end
-    assert_match(/invalid payment signature header:/i, error.message)
+    get "/api/premium_content/paywalled_info", headers: { "PAYMENT-SIGNATURE" => invalid_signature }
+
+    assert_response :payment_required
+    assert_not_nil response.headers["PAYMENT-REQUIRED"]
   end
 
   private
