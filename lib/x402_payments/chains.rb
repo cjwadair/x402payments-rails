@@ -116,7 +116,8 @@ module X402Payments
     end
 
     def from_caip2(caip2_string)
-      return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
+      result =  REVERSE_CAIP2_MAPPING[caip2_string] 
+      return result if result
 
       X402Payments.configuration.custom_chains.each do |name, config|
         caip2 = "#{config[:standard]}:#{config[:chain_id]}"

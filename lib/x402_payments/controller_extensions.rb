@@ -42,7 +42,7 @@ module X402Payments
 
     def generate_required_payment(options)
       # Basic validation: ensure required parameters are present
-      raise ArgumentError.new("amount is required") unless options[:amount].present?
+      raise ArgumentError, "amount is required" unless options[:amount].present?
 
       updated_options = options.merge({
         resource: request.original_url,
@@ -51,7 +51,7 @@ module X402Payments
 
       X402Payments::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
     rescue X402Payments::ClientMessaging::InvalidPaymentOptionsError, X402Payments::ConfigurationError => e
-      raise ArgumentError.new("Invalid payment options: #{e.message}")
+      raise ArgumentError, "Invalid payment options: #{e.message}"
     end
 
     def verify_payment(payment_header, required_payment)
@@ -72,20 +72,17 @@ module X402Payments
     rescue X402Payments::FacilitatorError => e
       Rails.logger.error "Facilitator error: #{e.message}"
       return nil
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "Unexpected error during payment verification: #{e.message}"
       return nil
     end
 
     def build_settlement_request(payment_header, required_payment)
-      
       payment_payload = decode_header(payment_header)
       
       # Build and validate settlement request object
       # This finds a matching accept and raises InvalidSettlementRequestError if: no matching accept is found or data is internally inconsistent
-      settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(payment_payload, required_payment[:accepts]).generate
-
-      settlement_request
+      X402Payments::FacilitatorMessaging::SettlementRequest.generate(payment_payload, required_payment[:accepts])
     end
 
     def verify_with_facilitator(settlement_request)
@@ -94,30 +91,28 @@ module X402Payments
 
 
     def settle_payment(settlement_request)
-      begin
-        settlement_response = facilitator_client.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+      settlement_response = facilitator_client.settle_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
 
-        if settlement_response["success"]
-          Rails.logger.info "Payment settled successfully: #{settlement_response.inspect}"
-          response.headers["PAYMENT-RESPONSE"] = Base64.strict_encode64(settlement_response.to_json)
-        else
-          Rails.logger.warn "Settlement unsuccessful: #{settlement_response.inspect}"
-        end
-
-        settlement_response
-      rescue X402Payments::FacilitatorError => e
-        Rails.logger.error "Facilitator error during settlement: #{e.message}"
-        nil
-      rescue StandardError => e
-        Rails.logger.error "Unexpected error during payment settlement: #{e.class} - #{e.message}\n#{e.backtrace.first(5).join("\n")}"
-        nil
+      if settlement_response["success"]
+        Rails.logger.info "Payment settled successfully: #{settlement_response.inspect}"
+        response.headers["PAYMENT-RESPONSE"] = Base64.strict_encode64(settlement_response.to_json)
+      else
+        Rails.logger.warn "Settlement unsuccessful: #{settlement_response.inspect}"
       end
+
+      settlement_response
+    rescue X402Payments::FacilitatorError => e
+      Rails.logger.error "Facilitator error during settlement: #{e.message}"
+      nil
+    rescue StandardError => e
+      Rails.logger.error "Unexpected error during payment settlement: #{e.class} - #{e.message}\n#{e.backtrace.first(5).join("\n")}"
+      nil
     end
 
     def decode_header(payment_header)
-      decoded = Base64.decode64(payment_header)
+      decoded = Base64.strict_decode64(payment_header)
       JSON.parse(decoded, symbolize_names: true)
-    rescue => e
+    rescue StandardError => e
       safe_message = e.message.encode("UTF-8", invalid: :replace, undef: :replace)
       Rails.logger.error "Failed to decode payment header: #{safe_message}"
       raise X402Payments::InvalidPaymentError, "Invalid payment signature header: #{safe_message}"

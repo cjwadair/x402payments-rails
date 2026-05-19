@@ -173,4 +173,17 @@ class PaymentRequiredResponseTest < ActiveSupport::TestCase
       instance.send(:validate_options!, invalid_options)
     end
   end
+
+  test "it validates wallet_address correctly when chain is not provided" do
+    instance = X402Payments::ClientMessaging::PaymentRequiredResponse.new
+    valid_options = @options.merge(wallet_address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+    assert_nothing_raised do
+      instance.send(:validate_options!, valid_options)
+    end
+
+    invalid_options = @options.merge(wallet_address: "invalid_address")
+    assert_raises(X402Payments::ClientMessaging::InvalidPaymentOptionsError) do
+      instance.send(:validate_options!, invalid_options)
+    end
+  end
 end

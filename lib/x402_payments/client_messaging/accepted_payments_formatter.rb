@@ -14,7 +14,7 @@ module X402Payments
         formatted_network = format_network(payment[:chain])
         wallet_address = resolve_wallet_address(payment, options)
 
-        response = {
+        {
           scheme: "exact",
           network: formatted_network,
           amount: atomic_amount.to_s,
@@ -23,8 +23,6 @@ module X402Payments
           maxTimeoutSeconds: X402Payments::MAX_TIMEOUT_SECONDS,
           extra: extra_data
         }
-
-        response
       end
 
       private

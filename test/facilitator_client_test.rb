@@ -401,11 +401,6 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         Rails.logger = Logger.new(STDOUT)
         Rails.logger.level = Logger::INFO
 
-        puts "\n=== Making API Request ==="
-        puts "URL: #{X402Payments.configuration.facilitator_url}/verify"
-        puts "Full X402Payments Request:"
-        puts JSON.pretty_generate(@payload)
-
         response = @client.verify_payment(@payload, @payment_requirements)
 
         # Assert the response structure
@@ -415,29 +410,8 @@ class FacilitatorClientTest < ActiveSupport::TestCase
         # Check for success indicators
         assert(response["isValid"] || response["success"], "Payment should be valid")
 
-        # Log the response for inspection
-        puts "\n=== Live API Response (SUCCESS) ==="
-        puts JSON.pretty_generate(response)
-      rescue X402Payments::InvalidPaymentError => e
-        puts "\n=== API REJECTED PAYMENT ==="
-        puts "Error: #{e.message}"
-        puts "\nThis is expected with dummy test data."
-        puts "The facilitator returned an error because the signature is invalid."
-        puts "\nTo successfully test, you need:"
-        puts "1. A real authorization from a test wallet"
-        puts "2. A valid cryptographic signature"
-        puts "3. Current timestamps for validAfter/validBefore"
-        puts "\nCheck the logs above for the actual API response."
         raise e
       rescue X402Payments::FacilitatorError => e
-        puts "\n=== FACILITATOR ERROR ==="
-        puts "Error: #{e.message}"
-        puts "\nA 500 error means the facilitator API had a server error."
-        puts "Check the logs above for the response body from the API."
-        puts "Common causes:"
-        puts "- Malformed request data"
-        puts "- Server-side validation error"
-        puts "- API endpoint issue"
         raise e
       ensure
         Rails.logger = old_logger if old_logger

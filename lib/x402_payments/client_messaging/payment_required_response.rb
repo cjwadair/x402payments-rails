@@ -13,13 +13,11 @@ module X402Payments
 
         accepted_payments = build_accepted_payments_object(normalized_options)
 
-        response = build_response_object(
+        build_response_object(
           accepts: accepted_payments,
           resource_url: normalized_options[:resource],
           description: normalized_options[:description]
         )
-
-        response
       end
 
       private
@@ -38,7 +36,7 @@ module X402Payments
       end
 
       def normalize_options!(options)
-        normalized = options.dup
+        normalized = options.deep_dup
 
         # Strip currency symbols, commas, and whitespace from amount
         if normalized[:amount].is_a?(String)
@@ -79,17 +77,11 @@ module X402Payments
       end 
 
       def normalize_currency(currency)
-        if currency.present?
-          currency = currency.to_s.upcase
-        end
-        currency
+        currency&.to_s&.upcase
       end
 
       def normalize_wallet_address(wallet_address)
-        if wallet_address.present? && wallet_address.is_a?(String)
-          wallet_address = wallet_address.strip
-        end
-        wallet_address
+        wallet_address&.strip rescue wallet_address
       end
 
       def validate_options!(options)

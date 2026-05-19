@@ -68,10 +68,11 @@ class X402PaymentsTest < ActiveSupport::TestCase
   end
 
   test "from_caip2 returns correct network names for custom chains" do
-    X402Payments.configuration.custom_chains.each do |name, config|
-      caip2 = "#{config[:standard]}:#{config[:chain_id]}"
-      assert_equal name, X402Payments.from_caip2(caip2)
-    end
+    X402Payments.configuration.register_chain(name: "custom-chain", chain_id: 12345, standard: "eip155")
+
+    assert_equal "custom-chain", X402Payments.from_caip2("eip155:12345")
+  ensure
+    X402Payments.configuration.custom_chains.delete("custom-chain")
   end
 
   test "from_caip2 raises error for unknown CAIP-2 string" do
