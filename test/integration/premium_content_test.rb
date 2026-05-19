@@ -119,7 +119,7 @@ class PremiumContentTest < ActionDispatch::IntegrationTest
       decoded_json = Base64.strict_decode64(payment_header)
       json_response = JSON.parse(decoded_json)
 
-      assert_equal "Payment processing error", json_response["error"]
+      assert_equal "Payment required to access this resource", json_response["error"]
     end
   end
 

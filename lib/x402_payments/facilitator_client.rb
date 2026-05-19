@@ -61,12 +61,11 @@ module X402Payments
     private
 
     def connection
-      Faraday.new(url: @facilitator_url) do |faraday|
+      @connection ||= Faraday.new(url: @facilitator_url) do |faraday|
         faraday.options.timeout      = 5   # read timeout
         faraday.options.open_timeout = 2   # connect timeout
         faraday.adapter Faraday.default_adapter
       end
-
     end
 
     def handle_verify_response(response)

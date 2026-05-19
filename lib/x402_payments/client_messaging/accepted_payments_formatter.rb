@@ -44,7 +44,7 @@ module X402Payments
         end
       end
 
-def convert_to_atomic_units(amount, decimals)
+      def convert_to_atomic_units(amount, decimals)
         (BigDecimal(amount.to_s) * 10**decimals).to_i
       end
 

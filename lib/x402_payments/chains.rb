@@ -116,14 +116,14 @@ module X402Payments
     end
 
     def from_caip2(caip2_string)
-    	return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
+      return REVERSE_CAIP2_MAPPING[caip2_string] if REVERSE_CAIP2_MAPPING[caip2_string]
 
-    	X402Payments.configuration.custom_chains.each do |name, config|
-    		caip2 = "#{config[:standard]}:#{config[:chain_id]}"
-    		return name if caip2 == caip2_string
-    	end
+      X402Payments.configuration.custom_chains.each do |name, config|
+        caip2 = "#{config[:standard]}:#{config[:chain_id]}"
+        return name if caip2 == caip2_string
+      end
 
-    	raise(ConfigurationError, "Unknown CAIP-2 network: #{caip2_string}")
+      raise(ConfigurationError, "Unknown CAIP-2 network: #{caip2_string}")
     end
 
     # NOTE: Fee payer configuration is under review.

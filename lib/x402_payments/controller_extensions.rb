@@ -9,26 +9,19 @@ module X402Payments
     end
 
     def require_x402_payment(options = {})
-      payment_header = request.headers["PAYMENT-SIGNATURE"]
       required_payment = generate_required_payment(options)
+      payment_header   = request.headers["PAYMENT-SIGNATURE"]
 
-      if payment_header.blank?
-        render_402_response(required_payment)
-      else
-        @verified_payment = verify_payment(payment_header, required_payment)
+      return render_402_response(required_payment) if payment_header.blank?
 
-        unless @verified_payment
-          return render_402_response(required_payment)
-        end
+      @x402_verified_payment = verify_payment(payment_header, required_payment)
 
-        unless X402Payments.configuration.optimistic
-          settlement_response = settle_payment(@verified_payment)
+      return render_402_response(required_payment) unless @x402_verified_payment
 
-          unless settlement_response && settlement_response["success"]
-            render_402_response(required_payment)
-          end
-        end
-      end
+      return if X402Payments.configuration.optimistic
+
+      settlement_response = settle_payment(@x402_verified_payment)
+      render_402_response(required_payment) unless settlement_response&.dig("success")
     end
 
     private
@@ -39,7 +32,7 @@ module X402Payments
 
     # Best-effort settlement after response — does not block access if it fails
     def settle_deferred_payment
-      settle_payment(@verified_payment) if X402Payments.configuration.optimistic && @verified_payment.is_a?(Hash)
+      settle_payment(@x402_verified_payment) if X402Payments.configuration.optimistic && @x402_verified_payment.is_a?(Hash)
     end
 
     def render_402_response(required_payment)
@@ -56,56 +49,49 @@ module X402Payments
         description: "Payment required to access #{request.path}"
       })
 
-      begin
-        X402Payments::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
-      rescue X402Payments::ClientMessaging::InvalidPaymentOptionsError, X402Payments::ConfigurationError => e
-        raise ArgumentError.new("Invalid payment options: #{e.message}")
-      end
+      X402Payments::ClientMessaging::PaymentRequiredResponse.generate(updated_options)
+    rescue X402Payments::ClientMessaging::InvalidPaymentOptionsError, X402Payments::ConfigurationError => e
+      raise ArgumentError.new("Invalid payment options: #{e.message}")
     end
 
     def verify_payment(payment_header, required_payment)
       # decode payment header received from client
-      begin
-        payment_payload = decode_header(payment_header)
-      rescue X402Payments::InvalidPaymentError => e
-        Rails.logger.warn "Invalid payment header: #{e.message}"
-        return nil
-      end
-
-      # Build and validate settlement request object
-      # This finds a matching accept and raises InvalidSettlementRequestError if:
-      # - no matching accept is found
-      # - data is internally inconsistent
-      begin
-        settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(payment_payload, required_payment[:accepts]).generate
-      rescue X402Payments::FacilitatorMessaging::InvalidSettlementRequestError => e
-        # Expected validation error - normal business flow
-        required_payment.merge!(error: e.message)
-        Rails.logger.warn "Payment validation failed: #{e.message}"
-        return nil
-      rescue StandardError => e
-        # Unexpected error - potential bug
-        required_payment.merge!(error: "Payment processing error")
-        Rails.logger.error "Unexpected error during payment validation: #{e.class} - #{e.message}\n#{e.backtrace.first(5).join("\n")}"
-        return nil
-      end
+      settlement_request = build_settlement_request(payment_header, required_payment)      
 
       # Verify payment with facilitator (external verification)
-      begin
-        facilitator_client.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
-      rescue X402Payments::InvalidPaymentError => e
-        Rails.logger.error "Invalid payment: #{e.message}"
-        return nil
-      rescue X402Payments::FacilitatorError => e
-        Rails.logger.error "Facilitator error: #{e.message}"
-        return nil
-      rescue => e
-        Rails.logger.error "Unexpected error during payment verification: #{e.message}"
-        return nil
-      end
+      verify_with_facilitator(settlement_request)
+      
+      settlement_request
+    rescue X402Payments::FacilitatorMessaging::InvalidSettlementRequestError => e
+      required_payment.merge!(error: e.message)
+      Rails.logger.warn "Payment validation failed: #{e.message}"
+      nil
+    rescue X402Payments::InvalidPaymentError => e
+      Rails.logger.error "Invalid payment: #{e.message}"
+      return nil
+    rescue X402Payments::FacilitatorError => e
+      Rails.logger.error "Facilitator error: #{e.message}"
+      return nil
+    rescue => e
+      Rails.logger.error "Unexpected error during payment verification: #{e.message}"
+      return nil
+    end
+
+    def build_settlement_request(payment_header, required_payment)
+      
+      payment_payload = decode_header(payment_header)
+      
+      # Build and validate settlement request object
+      # This finds a matching accept and raises InvalidSettlementRequestError if: no matching accept is found or data is internally inconsistent
+      settlement_request = X402Payments::FacilitatorMessaging::SettlementRequest.new(payment_payload, required_payment[:accepts]).generate
 
       settlement_request
     end
+
+    def verify_with_facilitator(settlement_request)
+      facilitator_client.verify_payment(settlement_request[:paymentPayload], settlement_request[:paymentRequirements])
+    end
+
 
     def settle_payment(settlement_request)
       begin
