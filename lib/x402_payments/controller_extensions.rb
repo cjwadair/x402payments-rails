@@ -56,11 +56,11 @@ module X402Payments
 
     def verify_payment(payment_header, required_payment)
       # decode payment header received from client
-      settlement_request = build_settlement_request(payment_header, required_payment)      
+      settlement_request = build_settlement_request(payment_header, required_payment)
 
       # Verify payment with facilitator (external verification)
       verify_with_facilitator(settlement_request)
-      
+
       settlement_request
     rescue X402Payments::FacilitatorMessaging::InvalidSettlementRequestError => e
       required_payment.merge!(error: e.message)
@@ -68,18 +68,18 @@ module X402Payments
       nil
     rescue X402Payments::InvalidPaymentError => e
       Rails.logger.error "Invalid payment: #{e.message}"
-      return nil
+      nil
     rescue X402Payments::FacilitatorError => e
       Rails.logger.error "Facilitator error: #{e.message}"
-      return nil
+      nil
     rescue StandardError => e
       Rails.logger.error "Unexpected error during payment verification: #{e.message}"
-      return nil
+      nil
     end
 
     def build_settlement_request(payment_header, required_payment)
       payment_payload = decode_header(payment_header)
-      
+
       # Build and validate settlement request object
       # This finds a matching accept and raises InvalidSettlementRequestError if: no matching accept is found or data is internally inconsistent
       X402Payments::FacilitatorMessaging::SettlementRequest.generate(payment_payload, required_payment[:accepts])

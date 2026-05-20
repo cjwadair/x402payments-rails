@@ -6,7 +6,6 @@ module X402Payments
   module ClientMessaging
     class AcceptedPaymentsFormatter
       def format(payment, options)
-        
         token_config = get_token_config(payment)
         asset_address = token_config[:address]
         atomic_amount = convert_to_atomic_units(options[:amount], token_config[:decimals])

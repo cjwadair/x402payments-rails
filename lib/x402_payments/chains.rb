@@ -98,9 +98,9 @@ module X402Payments
       SOLANA_CHAINS.include?(chain) || chain.start_with?("solana:")
     end
 
-    # NOTE :: Will return true if supplied with a chain name that is not evm or solana. 
+    # NOTE :: Will return true if supplied with a chain name that is not evm or solana.
     def evm_chain?(chain_name)
-      return false if chain_name.nil? 
+      return false if chain_name.nil?
       !solana_chain?(chain_name)
     end
 
@@ -116,7 +116,7 @@ module X402Payments
     end
 
     def from_caip2(caip2_string)
-      result =  REVERSE_CAIP2_MAPPING[caip2_string] 
+      result =  REVERSE_CAIP2_MAPPING[caip2_string]
       return result if result
 
       X402Payments.configuration.custom_chains.each do |name, config|

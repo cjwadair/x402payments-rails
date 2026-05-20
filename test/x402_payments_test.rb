@@ -92,5 +92,4 @@ class X402PaymentsTest < ActiveSupport::TestCase
     assert_nil X402Payments.fee_payer_for("avalanche-fuji")
     assert_nil X402Payments.fee_payer_for("avalanche")
   end
-
 end

@@ -67,14 +67,14 @@ module X402Payments
         normalized
       end
 
-      #converts from CAIP2 format to chain name if needed, otherwise returns original value
+      # converts from CAIP2 format to chain name if needed, otherwise returns original value
       def normalize_chain(chain)
         if chain.present? && chain.include?(":")
           chain_name = X402Payments.from_caip2(chain.to_s)
           chain = chain_name if chain_name.present?
         end
         chain
-      end 
+      end
 
       def normalize_currency(currency)
         currency&.to_s&.upcase

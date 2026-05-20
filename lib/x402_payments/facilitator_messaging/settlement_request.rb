@@ -16,7 +16,6 @@ module X402Payments
       end
 
       def generate
-
         find_matching_accept!
         validate_inputs!
 
